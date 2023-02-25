@@ -1,63 +1,57 @@
-// every node of the conversational graph is an instance of dialogue_state
 node dialogue_state {
-    has title;
-    has message; // message variable defines what will be said when this node is visited
-    
-    // each node has its own walk context so that the conversation can have a notion of state
-    // if the node hasn't been visited before, we should initialize the conversation state with this function
-    // will likely need a flag to do this, however for our purposes we may not even need state if we are using a python backend
+    has name;
     can init_wlk_ctx {
         new_wlk_ctx = {
-            "intent": null, // what the user types, triggering the transition
-            "entities": {}, // TODO: implement entity extractor and put entities here, pass them on when necessary
-            "prev_state": null, // the node we were previously at
-            "next_state": null, // the node which we will go to
-            "respond": false // a flag which signals if we output the message
+            "intent": null,
+            "entities": {},
+            "prev_state": null,
+            "next_state": null,
+            "respond": false
         };
+        if ("entities" in visitor.wlk_ctx) {
+            // Carry over extracted entities from previous interaction
+            new_wlk_ctx["entities"] = visitor.wlk_ctx["entities"];
+        }
         visitor.wlk_ctx = new_wlk_ctx;
     }
     can nlu {}
-    // process function efines how we transition between graph nodes
     can process {
-        // visitor is the walker that moves between nodes
-        // when we are at a node, if we have already filled out the context variable
-        // (meaning we already visited the node)
-        // output the response
         if (visitor.wlk_ctx["prev_state"]): visitor.wlk_ctx["respond"] = true;
-        // otherwise set the next state for where we go after we get a response
-        // and also set the previous state to prepare for a response
         else {
-            visitor.wlk_ctx["next_state"] = -[intent_transition(intent==visitor.wlk_ctx["intent"])]->[0];
+            visitor.wlk_ctx["next_state"] = net.root();
             visitor.wlk_ctx["prev_state"] = here;
         }
     }
     can nlg {}
-    // call this funciton to print a message
-    can print_message {
-        std.out(message);
-    }
 }
 
 node dialogue_yn:dialogue_state{
-}
-
-node dialogue_root:dialogue_state {
-    has title = "dialogue_root";
-    has message = "Welcome to Fridgechef, is this your first time using the app?";
-}
-
-// the node for when we complete the dialogue is the same, except i overwrite the node transition variable to do nothing
-node complete:dialogue_state {
-    has title="User likes the recipe";
-    has message="";
-    can process {
-        // this throws an error technically, but not sure how else to quit the dialogue.
+    can intent.yn;
+    can nlu {
+        if (!visitor.wlk_ctx["prev_state"]) {
+            visitor.wlk_ctx["intent"] = intent.yn(visitor.input);
+        }
     }
+    can process {
+        if (visitor.wlk_ctx["prev_state"]): visitor.wlk_ctx["respond"] = true;
+        else {
+            for n in --> {
+                if (n.context["answer"] == visitor.wlk_ctx["intent"]){
+                    visitor.wlk_ctx["next_state"] = n;
+                    break;
+                }
+            }
+            visitor.wlk_ctx["prev_state"] = here;
+        }
+    }
+    can nlg {
+        visitor.response = "I can answer a variety of FAQs related to Tesla. What can I help you with?";
+    } nlu {
+        if (Q)
+    }
+
 }
 
-edge intent_transition {
-    has intent;
-}
 
 // main graph spawns all the nodes and creates edges
 graph main_graph {
@@ -81,7 +75,7 @@ graph main_graph {
             message="How long do you have to cook?"
         );
 
-        output_recipe = spawn node::dialogue_yn(
+        output_recipe = spawn node::dialogue_state(
             title="Recipe",
             message="Here's the recipe I outputted, do you like it?"
         );
@@ -125,49 +119,10 @@ walker talk {
     has question;
     has wlk_ctx = {};
     has response;
-    can intent.yn;
     root {
         // begin at dialogue root
         take --> node::dialogue_root;
     }
-    dialogue_root{
-        if (!question){
-            here::init_wlk_ctx;
-            question = std.input("FridgeChef (Ctrl + C to exit)> ");
-            predicted_intent = intent.yn(question);
-            visitor.wlk_ctx["intent"] = predicted_intent;
-            take visitor.wlk_ctx["next_state"];
-        }
-        here::process;
-        if (visitor.wlk_ctx["respond"]) {
-            here::nlg;
-            here::print_message;
-            question = null;
-            take visitor.wlk_ctx["next_state"];
-        } else {
-            take visitor.wlk_ctx["next_state"] else: take here;
-        }
-    }
-    dialogue_yn{
-        if (!question){
-            here::init_wlk_ctx;
-            question = std.input("FridgeChef (Ctrl + C to exit)> ");
-            predicted_intent = intent.yn(question);
-            visitor.wlk_ctx["intent"] = predicted_intent;
-            take visitor.wlk_ctx["next_state"];
-        }
-        here::process;
-        if (visitor.wlk_ctx["respond"]) {
-            here::nlg;
-            here::print_message;
-            question = null;
-            take visitor.wlk_ctx["next_state"];
-        } else {
-            take visitor.wlk_ctx["next_state"] else: take here;
-        }
-        
-    }
-
     // this triggers everytime we traverse a node of type "dialogue state"
     dialogue_state {
         // first, if a response (question variable) hasn't been defined, prompt input and set intent variable
