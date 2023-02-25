@@ -41,7 +41,22 @@ node dialogue_state {
 node dialogue_yn:dialogue_state{
 }
 
-node dialogue_root:dialogue_state{
+node dialogue_root:dialogue_state {
+    has title = "dialogue_root";
+    has message = "Welcome to Fridgechef, is this your first time using the app?";
+    // dialogue root exactly the same as dialogue state, except we print the message at context initialization
+    // i tried so hard to find a better way to do this but this was all i could figure out for the time being :/
+    can init_wlk_ctx {
+        new_wlk_ctx = {
+            "intent": null,
+            "entities": {},
+            "prev_state": null,
+            "next_state": null,
+            "respond": false
+        };
+        visitor.wlk_ctx = new_wlk_ctx;
+        std.out(message);
+    }
 }
 
 // the node for when we complete the dialogue is the same, except i overwrite the node transition variable to do nothing
