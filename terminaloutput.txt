@@ -1,0 +1,27 @@
+# jsctl actions load local calculator/calculator.py
+{
+  "success": true
+}
+
+# jsctl jac build main.jac
+2023-02-14 16:47:04,140 - WARNING - rt_warn: main.jac:main.jac - line 19, col 4 - rule can_stmt - Attempting auto-load for calculator.add
+2023-02-14 16:47:04,141 - WARNING - rt_warn: main.jac:main.jac - line 19, col 4 - rule can_stmt - Builtin action unable to be loaded - calculator.add
+Build of main.jir complete!
+
+# jsctl jac run main.jac
+2023-02-14 16:48:06,701 - WARNING - rt_warn: main.jac:main.jac - line 19, col 4 - rule can_stmt - Attempting auto-load for calculator.add
+2023-02-14 16:48:06,709 - WARNING - rt_warn: main.jac:main.jac - line 19, col 4 - rule can_stmt - Builtin action unable to be loaded - calculator.add
+2023-02-14 16:48:06,710 - WARNING - rt_warn: main.jac:init - line 20, col 26 - rule expr_list - Attempting auto-load for calculator.add
+2023-02-14 16:48:06,716 - WARNING - rt_warn: main.jac:init - line 20, col 26 - rule expr_list - Builtin action unable to be loaded - calculator.add
+2023-02-14 16:48:06,716 - ERROR - rt_error: main.jac:init - line 20, col 26 - rule expr_list - Cannot execute calculator.add - Not Found
+{
+  "success": false,
+  "report": [
+    null
+  ],
+  "final_node": "urn:uuid:b46f40c6-fa40-4edb-be3a-278445bf28e4",
+  "yielded": false,
+  "errors": [
+    "main.jac:init - line 20, col 26 - rule expr_list - Cannot execute calculator.add - Not Found"
+  ]
+}

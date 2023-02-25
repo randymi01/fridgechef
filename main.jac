@@ -38,22 +38,10 @@ node dialogue_state {
     }
 }
 
-node dialogue_root:dialogue_state {
-    has title = "dialogue_root";
-    has message = "Welcome to Fridgechef, is this your first time using the app?";
-    // dialogue root exactly the same as dialogue state, except we print the message at context initialization
-    // i tried so hard to find a better way to do this but this was all i could figure out for the time being :/
-    can init_wlk_ctx {
-        new_wlk_ctx = {
-            "intent": null,
-            "entities": {},
-            "prev_state": null,
-            "next_state": null,
-            "respond": false
-        };
-        visitor.wlk_ctx = new_wlk_ctx;
-        std.out(message);
-    }
+node dialogue_yn:dialogue_state{
+}
+
+node dialogue_root:dialogue_state{
 }
 
 // the node for when we complete the dialogue is the same, except i overwrite the node transition variable to do nothing
@@ -74,7 +62,10 @@ graph main_graph {
     has anchor dialogue_root;
 
     spawn {
-        dialogue_root = spawn node::dialogue_root;
+        dialogue_root = spawn node::dialogue_root(
+            has title = "dialogue_root",
+            has message = "Welcome to Fridgechef, is this your first time using the app?"
+        );
 
         dietary_restrictions = spawn node::dialogue_state(
             title="Dietary restrictions",
@@ -91,7 +82,7 @@ graph main_graph {
             message="How long do you have to cook?"
         );
 
-        output_recipe = spawn node::dialogue_state(
+        output_recipe = spawn node::dialogue_yn(
             title="Recipe",
             message="Here's the recipe I outputted, do you like it?"
         );
@@ -112,8 +103,10 @@ graph main_graph {
         // with an intent classifier, we can map different inputs to the intent variable options
         dialogue_root +[intent_transition(intent="yes")]+> dietary_restrictions;
         dietary_restrictions +[intent_transition(intent="allergies")]+> current_ingredients;
+
         dialogue_root +[intent_transition(intent="no")]+> current_ingredients;
         current_ingredients +[intent_transition(intent="ingredients")]+> preference;
+
         preference +[intent_transition(intent="preferences")]+> output_recipe;
         output_recipe +[intent_transition(intent="yes")]+> is_like;
         is_like +[intent_transition(intent="exit")]+> complete;
@@ -135,10 +128,19 @@ walker talk {
     has question;
     has wlk_ctx = {};
     has response;
+    can intent.yn;
     root {
         // begin at dialogue root
         take --> node::dialogue_root;
     }
+
+    dialogue_yn{
+        question = std.input("FridgeChef (Ctrl + C to exit)> ");
+        predicted_intent = intent.yn(question);
+        visitor.wlk_ctx["intent"] = predicted_intent;
+        take visitor.wlk_ctx["next_state"];
+    }
+
     // this triggers everytime we traverse a node of type "dialogue state"
     dialogue_state {
         // first, if a response (question variable) hasn't been defined, prompt input and set intent variable
