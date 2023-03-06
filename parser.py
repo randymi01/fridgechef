@@ -1,3 +1,10 @@
+#Used for pre-processing all the recipes and storing result data into json files
+#so we don't have to preprocess everytime a user runs the program
+
+
+
+
+
 import json
 import nltk
 import difflib as dl
@@ -6,10 +13,28 @@ from ingredient_parser import parse_ingredient
 
 #Name to count dictionary
 #ingr name as key, ingr count as value
-ingredient_counts = {}
+ingredient_counts = {
+
+}
 
 #Used to store finished recipes after ingredients have been parsed
 #Key is recipe title, value is ingredients
+
+#parsed_recipes[key: recipe name]{
+#
+#   ingredients: [
+#       {name: "butter", amount: 1, unit: "cup", nrg: 0.0},     NOTE: Calories, fat, protein etc. per ingredient in the recipe
+#       ]
+#       
+#   instructions:[]                      NOTE: Instructions is a list of dictionaries with text as keys
+#   nutrition (per 100g): {              NOTE: This is at the recipe level, not ingredient level
+#       fat: 3.4,
+#       protein: 1.2,
+#       ...
+#   }
+#}
+
+
 parsed_recipes = {}
 
 
@@ -73,10 +98,6 @@ def transform_text(text):
             else:
                 new_text = descriptor + " " + new_text 
 
-
-    if new_text == "":
-        print(text)
-
     parsed = parse_ingredient(new_text)
     return parsed["name"]
 
@@ -92,23 +113,40 @@ with open('recipe_p1.json', 'r') as recipe_file:
         recipe_title = recipe["title"]
         #Unparsed ingredients
         r_ingredients = recipe['ingredients']
+        
+        #Empty dictionary to conform to parsed_recipes dictionary above
+        parsed_recipe_data = {
+            "ingredients": [],
+            "instructions": [], 
+            "nutrition": {
+                "fat": 0,
+                "protein": 0,
+                "nrg": 0
+            }
+        }
 
-        parsed_ingredients = []
-    
-        for ingr in r_ingredients:
+
+        for index, ingr in enumerate(r_ingredients):
             ingr_desc = ingr["text"]
             ingr_name = transform_text(ingr_desc) #Parsed name
 
+            #ingr_dict to be used for recipe storage later  NOTE: add protein and fat as we need it
+            ingr_dict = {
+                "name": ingr_name,
+                "nrg": recipe["nutr_per_ingredient"][index]["nrg"]
+            }
+
             #Add Ingredient data to be used later
-            
             if ingr_name in ingredient_counts:
                 ingredient_counts[ingr_name] += 1
             else:
                 ingredient_counts[ingr_name] = 1
 
-            parsed_ingredients.append(ingr_name)
+            parsed_recipe_data["ingredients"].append(ingr_dict)
 
-        parsed_recipes[recipe_title] = parsed_ingredients
+        parsed_recipe_data["instructions"] = recipe["instructions"]
+        #TODO: Add Nutrition data for recipe
+        parsed_recipes[recipe_title] = parsed_recipe_data
 
 
     #Write parsed data to output data for storage and later use
