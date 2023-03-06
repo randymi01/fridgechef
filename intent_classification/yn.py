@@ -7,4 +7,4 @@ classifier = pipeline('sentiment-analysis')
 
 @jaseci_action(act_group=["intent"], allow_remote=True)
 def yn(text: str):
-    return 'yes' if classifier(text)[0]['label'] == "POSITIVE" else 'no'
+    return 'yes' if (classifier(text)[0]['label'] == "POSITIVE") else 'no'

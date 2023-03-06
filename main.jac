@@ -39,11 +39,44 @@ node dialogue_state {
 }
 
 node dialogue_yn:dialogue_state{
+    can process {
+        // visitor is the walker that moves between nodes
+        // when we are at a node, if we have already filled out the context variable
+        // (meaning we already visited the node)
+        // output the response
+        if (visitor.wlk_ctx["prev_state"]): visitor.wlk_ctx["respond"] = true;
+        // not sure why if statement breaks code, but this has gotten me the closest to a working solution so far
+        visitor.wlk_ctx["next_state"] = -[intent_transition(intent==visitor.wlk_ctx["intent"])]->[0];
+        visitor.wlk_ctx["prev_state"] = here;
+
+    }
 }
 
 node dialogue_root:dialogue_state {
     has title = "dialogue_root";
     has message = "Welcome to Fridgechef, is this your first time using the app?";
+
+    can init_wlk_ctx {
+        new_wlk_ctx = {
+            "intent": null,
+            "entities": {},
+            "prev_state": null,
+            "next_state": null,
+            "respond": false
+        };
+        visitor.wlk_ctx = new_wlk_ctx;
+        std.out(message);
+    }
+    can process {
+        // for the dialogue root we always want the response to be false because we want to move states and then respond
+        if (visitor.wlk_ctx["prev_state"]): visitor.wlk_ctx["respond"] = true;
+        // otherwise set the next state for where we go after we get a response
+        // and also set the previous state to prepare for a response
+        else {
+            visitor.wlk_ctx["next_state"] = -[intent_transition(intent==visitor.wlk_ctx["intent"])]->[0];
+            visitor.wlk_ctx["prev_state"] = here;
+        }
+    }
 }
 
 // the node for when we complete the dialogue is the same, except i overwrite the node transition variable to do nothing
@@ -107,7 +140,7 @@ graph main_graph {
         preference +[intent_transition(intent="preferences")]+> output_recipe;
         output_recipe +[intent_transition(intent="yes")]+> is_like;
         is_like +[intent_transition(intent="exit")]+> complete;
-        is_like +[intent_transition(intent="no")]+> dont_like;
+        output_recipe +[intent_transition(intent="no")]+> dont_like;
         dont_like +[intent_transition(intent="okay")]+> output_recipe;
     }
 }
@@ -130,37 +163,32 @@ walker talk {
         // begin at dialogue root
         take --> node::dialogue_root;
     }
+    // since we always know we're reaching this state and transitioning, no if statements
     dialogue_root{
-        if (!question){
-            here::init_wlk_ctx;
-            question = std.input("FridgeChef (Ctrl + C to exit)> ");
-            predicted_intent = intent.yn(question);
-            visitor.wlk_ctx["intent"] = predicted_intent;
-            take visitor.wlk_ctx["next_state"];
-        }
+        here::init_wlk_ctx;
+        question = std.input("FridgeChef (Ctrl + C to exit)> ");
+        predicted_intent = intent.yn(question);
+        visitor.wlk_ctx["intent"] = predicted_intent;
+        //take visitor.wlk_ctx["next_state"];
         here::process;
-        if (visitor.wlk_ctx["respond"]) {
-            here::nlg;
-            here::print_message;
-            question = null;
-            take visitor.wlk_ctx["next_state"];
-        } else {
-            take visitor.wlk_ctx["next_state"] else: take here;
-        }
+        take visitor.wlk_ctx["next_state"] else: take here;
     }
+    // this throws a bug right now: the issue is that printing happens before the state actually transitions
+    // this leads to the same state being repeated twice for yes no questions
+    // a fix might be to not have an intent classifier for some parts of the dialogue
+    // maybe make all dialogue into yes/no questions to prompt any entity extraction instances?
     dialogue_yn{
         if (!question){
+            here::print_message;
             here::init_wlk_ctx;
             question = std.input("FridgeChef (Ctrl + C to exit)> ");
             predicted_intent = intent.yn(question);
             visitor.wlk_ctx["intent"] = predicted_intent;
-            take visitor.wlk_ctx["next_state"];
+            //take visitor.wlk_ctx["next_state"];
         }
         here::process;
         if (visitor.wlk_ctx["respond"]) {
             here::nlg;
-            here::print_message;
-            question = null;
             take visitor.wlk_ctx["next_state"];
         } else {
             take visitor.wlk_ctx["next_state"] else: take here;
@@ -171,17 +199,18 @@ walker talk {
     // this triggers everytime we traverse a node of type "dialogue state"
     dialogue_state {
         // first, if a response (question variable) hasn't been defined, prompt input and set intent variable
+        std.out("reached state");
         if (!question) {
+            here::print_message;
             here::init_wlk_ctx;
             question = std.input("FridgeChef (Ctrl + C to exit)> ");
             visitor.wlk_ctx["intent"] = question;
         }
         // process the response to figure out what node to transition to next
         here::process;
-        // if the "respond" variable is set, output the response and erase the question, then go to next state
+        // if the "respond" variable is set, go to next state
         if (visitor.wlk_ctx["respond"]) {
             here::nlg;
-            here::print_message;
             question = null;
             take visitor.wlk_ctx["next_state"];
         } else {
