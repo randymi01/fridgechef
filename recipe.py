@@ -14,7 +14,8 @@ ingr_term_blacklist = ["without", "fluid", "hard",
                        "double-acting", "raw",
                        "regular", "grass-fed",
                        "denny", "varieties",
-                       "unenriched", "spartan"]
+                       "unenriched", "spartan",
+                       "broiler"]
 ingr_replace_map = {"leavening" : "baking soda",
                     "oil, olive" : "olive oil"}
                        # leavening agents, yeast, baker's, active dry
@@ -33,8 +34,9 @@ our_recipes = {}
 #    "count": 0
 #}
 parsed_ingredients = {}
+# TODO: ADD INGREDIENT DATASET DATA (ie: calories / weight, maybe a food group as well)
 default_ingr = {
-    "count": 0
+    "count": 1
 }
 
 def score(user_ingredients, recipe):
@@ -80,11 +82,11 @@ def transform_text(text):
     return new_text
 
 
-with open('100recipes.json', 'r') as recipe_file:
+with open('recipe_p2.json', 'r') as recipe_file:
     r_file = json.load(recipe_file)
 
     print(len(r_file))
-    for index in range(0, 100):
+    for index in range(0, len(r_file) - 1):
         recipe = r_file[index]
 
         #Grab relevant data from the recipes
@@ -98,12 +100,29 @@ with open('100recipes.json', 'r') as recipe_file:
             #print(ingr["text"])
             # print(transform_text(ingr["text"]))
             parsed_i = parse_ingredient(transform_text(ingr["text"]))
+
+            # TODO: Match recipe ingredient name with ingredient dataset name. 
+            # Allows us to obtain more data on the ingredient itself
+            #parsed_i["name"] = dl.get_close_matches(parsed_i["name"], #Set of ingredient names)
+
             #print(parsed_i["name"])
 
             adjusted_ingredients.add(parsed_i["name"])
-            parsed_ingredients.get(parsed_i["name"], default_ingr)["count"] += 1
 
+            # REMOVE THIS BECAUSE WE HAVE INGREDIENT DATASET TO SPAN OVER ALL POSSIBLE INGREDIENTS
+            # TODO: BEGIN REMOVE
+            if parsed_i["name"] in parsed_ingredients:
+                parsed_ingredients[parsed_i["name"]]["count"] += 1
+            else:
+                parsed_ingredients[parsed_i["name"]] = {
+                    "count": 1
+                }
 
+            # TODO: END REMOVE
+
+            #parsed_ingredients[parsed_i["name"]] = parsed_ingredients.get(parsed_i["name"], default_ingr)["count"] += 1
+
+            
 
             #parsed_ingredients.add(parsed_i["name"])
             
@@ -124,20 +143,22 @@ with open('100recipes.json', 'r') as recipe_file:
             }
         
 
-    input = {"milk", "tortillas", "bell pepper", "chicken", "salsa", "sour cream", "cheese", "pasta", "rice", "salt", "butter", "onions"}
+    input = {"milk", "tortillas", "bell pepper", "chicken", "salsa", "sour cream", "cheddar cheese", "pasta", "rice", "salt", "butter", "onions", "chicken breast"}
     correct_recipe_id = "0005fc89f7" # Used for testing purposes
     matched_input = set()
+    print(len(parsed_ingredients))
 
     for user_ingredient in input:
         #Find closest ingredient to one user provided
-        closest_i = dl.get_close_matches(user_ingredient, parsed_ingredients, 1, 0.5) # TODO: Modify this to use key set
+        print(f"User input: {user_ingredient}")
+
+        
+        closest_i = dl.get_close_matches(user_ingredient, parsed_ingredients, 1, 0.7) # TODO: Modify this to use key set
 
         #If user inputs garbage skip
         if len(closest_i) == 0 :
             print("No match")
             continue
-
-        print(f"User input: {user_ingredient}")
         print(f"Closest Match: {closest_i}")
         matched_input.add(closest_i[0])
 
