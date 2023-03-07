@@ -11,19 +11,47 @@ import difflib as dl
 #user_ingredients - user inputted ingredients
 #recipe - recipe to be given a score
 # Assumes user ingredients and recipe ingredients have no repeats.
-def score_recipe(user_ingredients, recipe):
+def score_recipe(user_ingredients, name, recipe):
 
-    # TODO: Plan is to return the summation of (1 - percent) * calories for all matched ingredients
-    matched_ingredients = 0
+    # TODO: REMOVE INGR IF STATEMENT
+    if len(recipe["ingredients"]) < 5:
+        return 0
+    matched_ingredients = []
+    total_energy = 0
+    missing_ingredients = []
 
-    for ui in user_ingredients:
-        for ri in recipe["ingredients"]:
-            if ri["name"] == ui:
-                matched_ingredients += 1
+    for ri in recipe["ingredients"]:
+        ingr_matched = False
+        for ui in user_ingredients:
+            total_energy += ri["nrg"]
+            if ri["name"] == ui["name"]: # Ingredient is a match
+                matched_ingredients.append({
+                    "name": ri["name"],
+                    "nrg": ri["nrg"],
+                    "recipe_commonality_percent": ui["count"]
+                    })
 
-    percent = (float(matched_ingredients) / len(recipe["ingredients"]))
+                ingr_matched = True
+                break
+        
+        if not ingr_matched: # Ingredient is missing
+            missing_ingredients.append(ri)
 
-    return matched_ingredients + percent
+    # Count number of missing 'essential' ingredients
+    missing_important_ingr_count = 0
+    for missing_ingr in missing_ingredients:
+        if missing_ingr["nrg"] > 0 and missing_ingr["nrg"] / total_energy > 0.2: # If ingredient takes up > 20% of energy of meal, it is important
+            missing_important_ingr_count += 1
+
+
+    # Calculate matched_ingredient_score
+    matched_ingredient_score = 0
+    for matched_ingr in matched_ingredients:
+        matched_ingredient_score += (1-matched_ingr["recipe_commonality_percent"]) * (matched_ingr["nrg"] / total_energy)
+
+    score = matched_ingredient_score + -0.1 * missing_important_ingr_count
+
+    return score
 
 
 
@@ -34,20 +62,18 @@ def get_recs(user_ingredients):
 
         max_score = 0
         max_recipe = ""
-
         for r in r_file:
-            # TODO: Not sure what r_file[r] is. 
-            # I think it's best to just pass in the entire recipe entry instead of splitting into variables
-            # Makes the function more flexible
-            r_score = score_recipe(user_ingredients, r) #, r_file[r])
-
+            if r == "Very Easy Alternative Cheesecake Base" or r == "Clarified butter" or r == "Clarified Butter":
+                continue
+            r_score = score_recipe(user_ingredients, r, r_file[r]) #, r_file[r])
             if (r_score > max_score):
                 max_score = r_score
                 max_recipe = r
 
         print(max_score)
         print(max_recipe)
-        print(r_file[max_recipe])
+        print(r_file[max_recipe]["ingredients"])
+        print(user_ingredients)
         
         return max_recipe
         
@@ -56,11 +82,11 @@ def get_recs(user_ingredients):
 
 with open("ingredients.json", 'r') as ingredient_file:
     i_file = json.load(ingredient_file)
-
+    
     ingrs = i_file.keys()
 
     # TEST USER INPUT (Post entity-extraction)
-    input = ["butter", "salmon", "pork", "milk", "bacon", "flour", "ketchup", "spaghetti", "ground beef", "tomato sauce", "onions"]
+    input = ["salmon", "pork", "milk", "bacon", "flour", "ketchup", "spaghetti", "ground beef", "tomato sauce", "onions"]
 
     parsed_user_ingredients = []
     for user_ingr in input:
@@ -70,9 +96,10 @@ with open("ingredients.json", 'r') as ingredient_file:
             print("No match")
         else:
             print(closest_match[0])
-            parsed_user_ingredients.append(closest_match[0])
-
-
+            parsed_user_ingredients.append({
+                "name": closest_match[0],
+                "count": i_file[closest_match[0]]
+                })
     
     match = get_recs(parsed_user_ingredients)
 

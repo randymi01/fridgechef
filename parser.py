@@ -7,6 +7,7 @@
 
 import json
 import nltk
+nltk.download('averaged_perceptron_tagger')
 import difflib as dl
 from ingredient_parser import parse_ingredient
 
@@ -107,7 +108,7 @@ with open('recipe_p1.json', 'r') as recipe_file:
     r_file = json.load(recipe_file)
 
     #Loop through every recipe
-    for index in range(0, len(r_file) - 1):
+    for index in range(len(r_file)):
         recipe = r_file[index]
 
         recipe_title = recipe["title"]
@@ -146,8 +147,14 @@ with open('recipe_p1.json', 'r') as recipe_file:
 
         parsed_recipe_data["instructions"] = recipe["instructions"]
         #TODO: Add Nutrition data for recipe
+        #TODO: Prevent duplicate ingredients in a single recipe (ex: Alternative Cheesecake has butter twice)
+        #TODO: Delete recipes that contain an empty ingredient name (ex: Dill butter for...)
         parsed_recipes[recipe_title] = parsed_recipe_data
 
+
+    # Update ingredient_counts with percentage of recipes that ingredient appears in (divide all counts by total recipes)
+    for ingr, count in ingredient_counts.items():
+        ingredient_counts[ingr] /= float(len(r_file))
 
     #Write parsed data to output data for storage and later use
     with open('ingredients.json', 'w') as ingr_file:
