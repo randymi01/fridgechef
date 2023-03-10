@@ -7,20 +7,20 @@ import json
 import nltk
 import difflib as dl
 
+ignored_ingredients = ["butter"]
 
 #user_ingredients - user inputted ingredients
 #recipe - recipe to be given a score
 # Assumes user ingredients and recipe ingredients have no repeats.
 def score_recipe(user_ingredients, name, recipe):
 
-    # TODO: REMOVE INGR IF STATEMENT
-    if len(recipe["ingredients"]) < 5:
-        return 0
     matched_ingredients = []
     total_energy = 0
     missing_ingredients = []
 
     for ri in recipe["ingredients"]:
+        if ri["name"] in ignored_ingredients:
+            continue
         ingr_matched = False
         for ui in user_ingredients:
             total_energy += ri["nrg"]
@@ -63,8 +63,7 @@ def get_recs(user_ingredients):
         max_score = 0
         max_recipe = ""
         for r in r_file:
-            if r == "Very Easy Alternative Cheesecake Base" or r == "Clarified butter" or r == "Clarified Butter":
-                continue
+
             r_score = score_recipe(user_ingredients, r, r_file[r]) #, r_file[r])
             if (r_score > max_score):
                 max_score = r_score
@@ -86,7 +85,7 @@ with open("ingredients.json", 'r') as ingredient_file:
     ingrs = i_file.keys()
 
     # TEST USER INPUT (Post entity-extraction)
-    input = ["salmon", "pork", "milk", "bacon", "flour", "ketchup", "spaghetti", "ground beef", "tomato sauce", "onions"]
+    input = ["butter", "salmon", "pork", "milk", "bacon", "flour", "ketchup", "spaghetti", "ground beef", "tomato sauce", "onions"]
 
     parsed_user_ingredients = []
     for user_ingr in input:

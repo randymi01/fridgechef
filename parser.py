@@ -137,7 +137,7 @@ with open('recipe_p1.json', 'r') as recipe_file:
                 "nrg": recipe["nutr_per_ingredient"][index]["nrg"]
             }
 
-            #Add Ingredient data to be used later
+            # Add Ingredient data to be used later
             if ingr_name in ingredient_counts:
                 ingredient_counts[ingr_name] += 1
             else:
@@ -147,13 +147,46 @@ with open('recipe_p1.json', 'r') as recipe_file:
 
         parsed_recipe_data["instructions"] = recipe["instructions"]
         #TODO: Add Nutrition data for recipe
-        #TODO: Prevent duplicate ingredients in a single recipe (ex: Alternative Cheesecake has butter twice)
-        #TODO: Delete recipes that contain an empty ingredient name (ex: Dill butter for...)
-        parsed_recipes[recipe_title] = parsed_recipe_data
 
+        # Delete recipes that contain an empty ingredient name (ex: Dill butter for...)
+        empty_ingr_found = False
+        for i in range(len(parsed_recipe_data["ingredients"])):
+            ingr = parsed_recipe_data["ingredients"][i]
+            if len(ingr["name"]) == 0:
+                empty_ingr_found = True
+                break
+        # Skip remaining work (essentially 'deletes' this recipe from the recommendations data)
+        if empty_ingr_found:
+            continue
+
+        # Prevent duplicate ingredients in a single recipe (ex: Alternative Cheesecake has butter twice)
+        indices_to_remove = []
+        for first_index in range(len(parsed_recipe_data["ingredients"]) - 1):
+            first_ingr = parsed_recipe_data["ingredients"][first_index]
+            for next_index in range(first_index + 1, len(parsed_recipe_data["ingredients"])):
+                # Duplicates already found for this ingredient
+                if next_index in indices_to_remove:
+                    continue
+                next_ingr = parsed_recipe_data["ingredients"][next_index]
+                # Next ingredient is a duplicate of the first
+                if first_ingr["name"] == next_ingr["name"]:
+                    indices_to_remove.append(next_index)
+        parsed_ingredients = []
+
+        for i in range(len(parsed_recipe_data["ingredients"])):
+            if i not in indices_to_remove:
+                parsed_ingredients.append(parsed_recipe_data["ingredients"][i])
+        parsed_recipe_data["ingredients"] = parsed_ingredients
+
+        # Only add recipes that contain 4+ ingredients
+        if len(parsed_recipe_data["ingredients"]) >= 4:
+            parsed_recipes[recipe_title] = parsed_recipe_data
 
     # Update ingredient_counts with percentage of recipes that ingredient appears in (divide all counts by total recipes)
     for ingr, count in ingredient_counts.items():
+        # TODO: There are many ingredients that should never be matched because they are too specific. Should fix this
+        if len(ingr.split()) > 3:
+            print(ingr)
         ingredient_counts[ingr] /= float(len(r_file))
 
     #Write parsed data to output data for storage and later use
