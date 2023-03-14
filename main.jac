@@ -187,6 +187,7 @@ walker talk {
             //take visitor.wlk_ctx["next_state"];
         }
         here::process;
+        take visitor.wlk_ctx["next_state"];
         if (visitor.wlk_ctx["respond"]) {
             here::nlg;
             take visitor.wlk_ctx["next_state"];
@@ -199,7 +200,7 @@ walker talk {
     // this triggers everytime we traverse a node of type "dialogue state"
     dialogue_state {
         // first, if a response (question variable) hasn't been defined, prompt input and set intent variable
-        std.out("reached state");
+        //std.out("reached state");
         if (!question) {
             here::print_message;
             here::init_wlk_ctx;
