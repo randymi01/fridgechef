@@ -4,3 +4,4 @@
 !100recipes.json
 secret.py
 env/
+*.pyc
