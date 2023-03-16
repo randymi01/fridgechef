@@ -1,7 +1,10 @@
-*.json
 !recipe_p1.json
 !recipe_p2.json
 !100recipes.json
+!output.json
+*.json
 secret.py
 env/
+!entity_extraction/records/
 *.pyc
+*.bin
