@@ -13,7 +13,13 @@ classifier = pipeline('token-classification', model=model, tokenizer=tokenizer, 
 # return list of food items
 # turn debug to false to stop recording extractions
 def food_extractor(text: str, debug = True):
+    # remove punctuation and invalid characters first
+    text = ''.join([i for i in text if i.isalnum() or i == " "])
+
     output = classifier(text)
+
+    # change valid food output to entity group is "ADD" and score > 0.7
+
     if debug:
 
         # need to do some funky pathing stuff since module is being imported by main, but
@@ -26,7 +32,7 @@ def food_extractor(text: str, debug = True):
             f.write(str(output))
         
         os.chdir(current_directory)
-    return [i["word"] for i in output]
+    return [i["word"] for i in output if i["entity_group"] == "ADD" and i["score"] > 0.7]
         
 
 
