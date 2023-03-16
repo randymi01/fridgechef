@@ -1,5 +1,6 @@
 import numpy as np
 import intent_classification.yn as yn
+import entity_extraction.food_extractor as food_extractor
 import json
 
 class node:
@@ -52,19 +53,19 @@ class intent_node(node):
     def actions(self):
         self.prompt()
 
-class entity_extraction(node):
+class entity_extraction_node(node):
     def __init__(self, prompt: str, extraction_func, entity_name):
-        super().__init__()
+        super().__init__(prompt)
         self.extraction_func = extraction_func
         self.entity_name = entity_name
 
     # should return entities in list format
     def get_entity(self):
-        response = extraction_func(self._response)
+        response = self.extraction_func(self._response)
         if type(response) != list:
             raise Exception(f"Extraction function must return a list of entities")
         else:
-            return repsonse
+            return response
     def actions(self):
         self.prompt()
 
@@ -80,7 +81,7 @@ class walker:
         while not self.end_flag:
             self.current.actions()
             self.json_obj["responses"].append(self.current.get_response())
-            if isinstance(self.current, entity_extraction):
+            if isinstance(self.current, entity_extraction_node):
                 self.json_obj["entities"][self.current.entity_name] = self.current.get_entity()
             self.current = self.current.get_child()
             self.node_number += 1
@@ -104,8 +105,8 @@ class walker:
 n0_start = output_node("Hello, Welcome to FridgeChef")
 n1_first_time = intent_node("Is this your first time using FridgeChef?", yn.yn_intent)
 n2_dietary_restrictions = node("Do you have any dietary restrictions?")
-n3_ingredients = node("What ingredients do you have?")
-n4_preference = node("Do you have a cuisine preference?")
+n3_ingredients = entity_extraction_node("What ingredients do you have?",food_extractor.food_extractor, "ingredients")
+n4_preference = node("Do you have a cuisine preference? (leave blank if no preference)")
 
 # probably wanna make this an output node type
 n5_output_recipe = output_node("Here is your recipe")

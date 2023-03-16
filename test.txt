@@ -1,0 +1,1 @@
+[{'entity_group': 'ADD', 'score': 0.9805441, 'word': 'chicken broth', 'start': 9, 'end': 22}, {'entity_group': 'ADD', 'score': 0.92360795, 'word': 'hot sauce', 'start': 27, 'end': 36}]
