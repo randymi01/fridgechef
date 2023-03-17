@@ -8,3 +8,5 @@ env/
 !entity_extraction/records/
 *.pyc
 *.bin
+!conversations/output.json
+!entity_entity_extraction/records/*.json
