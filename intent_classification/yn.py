@@ -1,8 +1,10 @@
 from transformers import pipeline
-from jaseci.actions.live_actions import jaseci_action
+import os
 
-classifier = pipeline('sentiment-analysis')
+# you have to download the model
+classifier = pipeline('sentiment-analysis',model="distilbert-base-uncased-finetuned-sst-2-english")
 
-@jaseci_action(act_group=["yn_intent"], allow_remote=True)
+
 def yn_intent(text: str):
     return classifier(text)[0]['label']
+
