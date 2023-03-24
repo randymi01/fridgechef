@@ -9,3 +9,4 @@ ToDo
 2. Dietary Restriction Entity Extraction
 3. Cuisine Preference Entity Extraction
 4. Query Recipies
+5. Fix food entity extractor
