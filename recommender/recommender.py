@@ -3,9 +3,11 @@ import requests
 def list_to_str(my_list):
     list_str = ""
     for item in my_list:
-        list_str += list_str + item + ","
+        item = item.replace(" ", "_")
+        list_str += item + ","
     # Remove trailing comma
     list_str = list_str[0:len(list_str) - 1]
+    return list_str
 
 def get_recs(ingredients, count=1, diet=None, cuisine=None, includeNutrition=False):
     """
@@ -38,11 +40,13 @@ def get_recs(ingredients, count=1, diet=None, cuisine=None, includeNutrition=Fal
     PARAMS = {'apiKey': '10060e3f2d1a4d3d867e05e25e50ecb4',
               'includeIngredients': ingredients_str,
               'fillIngredients': True,
-              'includeInstructions': True,
+              'instructionsRequired': True,
               'addRecipeInformation': True, 
               'addRecipeNutrition': includeNutrition,
+              'type': 'main_course',
+              'sort': 'min-missing-ingredients',
               'number': count}
-    
+
     # Add optional parameters
     if diet is not None:
         PARAMS['diet'] = list_to_str(diet)
@@ -60,13 +64,14 @@ def get_recs(ingredients, count=1, diet=None, cuisine=None, includeNutrition=Fal
     results = []
     for result in data['results']:
 
-        # Add ingredients list - Liam
+        # Add ingredients list
         ingredients = []
-        # NOTE: Tuple should be (name (str), amount (float), unit (str))
+        for ingredient in result['extendedIngredients']:
+            ingredients.append((ingredient['nameClean'], float(ingredient['amount']), ingredient['unit']))
 
         # Add instructions - 
         instructions = []
-        for instruction in result['analyzedInstructions']['steps']:
+        for instruction in result['analyzedInstructions'][0]['steps']:
             instructions.append(instruction['step'])
 
 
@@ -74,6 +79,8 @@ def get_recs(ingredients, count=1, diet=None, cuisine=None, includeNutrition=Fal
             'title': result['title'],
             'readyInMinutes': result['readyInMinutes'],
             'servings': result['servings'],
+            'usedIngredientCount': result['usedIngredientCount'],
+            'missedIngredientCount': result['missedIngredientCount'],
             'ingredients': ingredients,
             'instructions': instructions
         }
@@ -87,12 +94,3 @@ def get_recs(ingredients, count=1, diet=None, cuisine=None, includeNutrition=Fal
     }
 
     return recommendations
-
-    # TODO: Remove data that we do not need
-            # data['results'][0]['readyInMinutes'] - done
-            # data['results'][0]['servings'] - done
-            # data['results'] - recommendations
-            # data['number'] - recommendations found - done
-            # data['results'][0]['ingredients'] - LIST of 3 TUPLES
-            # - 'ingredients' (name, amount, unit)
-    # return data
