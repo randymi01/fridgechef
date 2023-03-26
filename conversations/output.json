@@ -277,5 +277,41 @@
             ]
         },
         "length": 22
+    },
+    {
+        "responses": [
+            null,
+            "No",
+            "ingredients one two three",
+            "",
+            null,
+            "yes",
+            null
+        ],
+        "entities": {
+            "ingredients": []
+        },
+        "length": 7
+    },
+    {
+        "responses": [
+            null,
+            "no",
+            "watermelon, apple, banana, oats, cheese, oil",
+            "",
+            null,
+            "no",
+            null,
+            null,
+            "yes",
+            null
+        ],
+        "entities": {
+            "ingredients": [
+                "watermel",
+                "##on apple banana oats cheese"
+            ]
+        },
+        "length": 10
     }
 ]

@@ -1,6 +1,7 @@
 import numpy as np
 import intent_classification.yn as yn
 import entity_extraction.food_extractor as food_extractor
+import recommender.recommender as recommender
 import json
 
 class node:
@@ -28,6 +29,51 @@ class node:
 class output_node(node):
     def prompt(self):
         print("\n"+self._prompt)
+
+class recipe_query_node(output_node):
+    def __init__(self, prompt: str):
+        self.child = None
+        self._prompt = prompt
+        self._response = None
+        self.recipes = None
+        self.times_visited = 0
+        self.recipes_to_get = 10
+
+    
+    def query(self, entities):
+        # once we get cuisine preferences and restrictions, add here
+        try:
+            self.recipes = recommender.get_recs(entities["ingredients"], count=self.recipes_to_get)
+        except:
+            print("Error: Fridgechef is not working right now, come back later.")
+            exit(1)
+
+
+    def prompt(self):
+        # to iterate through different recipes, every time we visit, we increment the index we take the recipe from
+        idx = self.times_visited % self.recipes_to_get
+        self.times_visited += 1
+        recipe_title = self.recipes["results"][idx]["title"]
+        recipe_servings = self.recipes['results'][idx]['servings']
+        recipe_time = self.recipes['results'][idx]['readyInMinutes']
+        
+        recipe_ingredients = self.recipes["results"][idx]['ingredients']
+        recipe_instructions = self.recipes['results'][idx]['instructions']
+        print("\n"+self._prompt)
+        print("\n"+recipe_title)
+        print(str(recipe_servings) + " servings")
+        # if recipe time is greater than an hour, print the number of hours and minutes
+        if int(recipe_time / 60) > 0:
+            print(str(int(recipe_time / 60)) + " hours " + str(recipe_time % 60) + " minutes\n")
+        else:
+            print(str(recipe_time % 60) + " minutes\n")
+        for item in recipe_ingredients:
+            # prints num, unit, item, so like "2 tablespoons soy sauce"
+            print(str(item[1]) + " " + item[2] + " " + item[0])
+        for num, line in enumerate(recipe_instructions):
+            # prints numbered instructions, so like "1. boil water"
+            print(str(num + 1) + ". " + line)
+
 
 class intent_node(node):
     def __init__(self, prompt: str, intent_func):
@@ -77,8 +123,16 @@ class walker:
         self.json_path = json_path
         self.node_number = 0
         self.json_obj = {"responses":[], "entities":{}, "length":0}
+
+
+    def get_entities(self):
+        return self.json_obj["entities"]
+
+
     def traverse(self):
         while not self.end_flag:
+            if isinstance(self.current, recipe_query_node):
+                self.current.query(self.json_obj["entities"])
             self.current.actions()
             self.json_obj["responses"].append(self.current.get_response())
             if isinstance(self.current, entity_extraction_node):
@@ -103,13 +157,13 @@ class walker:
 
 
 n0_start = output_node("Hello, Welcome to FridgeChef")
+
 n1_first_time = intent_node("Is this your first time using FridgeChef?", yn.yn_intent)
 n2_dietary_restrictions = node("Do you have any dietary restrictions?")
 n3_ingredients = entity_extraction_node("What ingredients do you have?",food_extractor.food_extractor, "ingredients")
 n4_preference = node("Do you have a cuisine preference? (leave blank if no preference)")
 
-# probably wanna make this an output node type
-n5_output_recipe = output_node("Here is your recipe")
+n5_output_recipe = recipe_query_node("Here is your recipe")
 
 n6_like_recipe = intent_node("Do you like this recipe?",yn.yn_intent)
 n7_yes = output_node("Great!")
