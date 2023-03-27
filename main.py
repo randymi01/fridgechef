@@ -42,11 +42,13 @@ class recipe_query_node(output_node):
     
     def query(self, entities):
         # once we get cuisine preferences and restrictions, add here
-        try:
-            self.recipes = recommender.get_recs(entities["ingredients"], count=self.recipes_to_get)
-        except:
-            print("Error: Fridgechef is not working right now, come back later.")
-            exit(1)
+        if self.times_visited == 0:
+            try:
+                self.recipes = recommender.get_recs(entities["ingredients"], count=self.recipes_to_get)
+            except:
+                print("Error: Fridgechef is not working right now, come back later.")
+                exit(1)
+            self.recipes_to_get = self.recipes['number'] # in case we got less than 10 recipes, change number we have
 
 
     def prompt(self):
@@ -69,7 +71,11 @@ class recipe_query_node(output_node):
             print(str(recipe_time % 60) + " minutes\n")
         for item in recipe_ingredients:
             # prints num, unit, item, so like "2 tablespoons soy sauce"
-            print(str(item[1]) + " " + item[2] + " " + item[0])
+            if item[2]:
+                print(str(item[1]) + " " + item[2] + " " + item[0])
+            else:
+                print(str(item[1]) + " " + item[0])
+        print()
         for num, line in enumerate(recipe_instructions):
             # prints numbered instructions, so like "1. boil water"
             print(str(num + 1) + ". " + line)
@@ -131,6 +137,7 @@ class walker:
 
     def traverse(self):
         while not self.end_flag:
+            # perform a query when we reach a recipe query node
             if isinstance(self.current, recipe_query_node):
                 self.current.query(self.json_obj["entities"])
             self.current.actions()
