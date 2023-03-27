@@ -367,5 +367,38 @@
             ]
         },
         "length": 16
+    },
+    {
+        "responses": [
+            null,
+            "no",
+            "banana, salmon, cod, cream cheese, oranges, eggs, paprika, nuts, chicken stock",
+            "",
+            null,
+            "no",
+            null,
+            null,
+            "nope",
+            null,
+            null,
+            "not at all",
+            null,
+            null,
+            "no",
+            null,
+            null,
+            "yes",
+            null
+        ],
+        "entities": {
+            "ingredients": [
+                "banana salmon cod cream cheese oranges eggs",
+                "pa",
+                "##pr",
+                "##ika nuts",
+                "chicken stock"
+            ]
+        },
+        "length": 19
     }
 ]

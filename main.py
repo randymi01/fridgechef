@@ -37,7 +37,7 @@ class recipe_query_node(output_node):
         self._response = None
         self.recipes = None
         self.times_visited = 0
-        self.recipes_to_get = 10
+        self.recipes_to_get = 30
 
     
     def query(self, entities):
