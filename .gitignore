@@ -3,6 +3,9 @@
 !100recipes.json
 !output.json
 *.json
+*.Identifier
+!entity_extraction/food_ner_model/*.json
+!entity_extraction/food_ner_model/*.cfg
 secret.py
 env/
 !entity_extraction/records/

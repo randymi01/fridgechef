@@ -3,6 +3,7 @@ import intent_classification.yn as yn
 import entity_extraction.food_extractor as food_extractor
 import recommender.recommender as recommender
 import json
+import entity_extraction.entity_extract as entity_extract
 
 class node:
     def __init__(self, prompt: str):
@@ -167,7 +168,7 @@ n0_start = output_node("Hello, Welcome to FridgeChef")
 
 n1_first_time = intent_node("Is this your first time using FridgeChef?", yn.yn_intent)
 n2_dietary_restrictions = node("Do you have any dietary restrictions?")
-n3_ingredients = entity_extraction_node("What ingredients do you have?",food_extractor.food_extractor, "ingredients")
+n3_ingredients = entity_extraction_node("What ingredients do you have?",entity_extract.food_extract, "ingredients")
 n4_preference = node("Do you have a cuisine preference? (leave blank if no preference)")
 
 n5_output_recipe = recipe_query_node("Here is your recipe")

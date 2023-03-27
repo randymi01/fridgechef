@@ -400,5 +400,31 @@
             ]
         },
         "length": 19
+    },
+    {
+        "responses": [
+            null,
+            "no",
+            "butter banana egg meat coffee",
+            "",
+            null,
+            "no",
+            null,
+            null,
+            "no",
+            null,
+            null,
+            "no",
+            null,
+            null,
+            "yes",
+            null
+        ],
+        "entities": {
+            "ingredients": [
+                "butter banana egg meat coffee"
+            ]
+        },
+        "length": 16
     }
 ]
