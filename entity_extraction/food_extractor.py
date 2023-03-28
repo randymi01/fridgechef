@@ -4,6 +4,8 @@ import json
 import os
 from pathlib import Path
 
+# THIS FILE DEFUNCT ATM, USING entity_extract.py
+
 tokenizer = AutoTokenizer.from_pretrained("harr/distilbert-base-uncased-finetuned-ingredients")
 
 model = AutoModelForTokenClassification.from_pretrained("harr/distilbert-base-uncased-finetuned-ingredients")

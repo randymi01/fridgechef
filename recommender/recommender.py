@@ -71,8 +71,9 @@ def get_recs(ingredients, count=1, diet=None, cuisine=None, includeNutrition=Fal
 
         # Add instructions - 
         instructions = []
-        for instruction in result['analyzedInstructions'][0]['steps']:
-            instructions.append(instruction['step'])
+        if len(result['analyzedInstructions']) > 0: # added this to prevent error when recipe has no instructions, which I was getting earlier but I have no longer??
+            for instruction in result['analyzedInstructions'][0]['steps']:
+                instructions.append(instruction['step'])
 
 
         recommendation = {

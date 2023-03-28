@@ -23,6 +23,6 @@ def cuisine_extract(user_input):
     return cuisine_matches
 
 # DEMO
-ui = "I prefer to eat korean food"
-cuisines = cuisine_extract(ui)
-print(cuisines)
+#ui = "I prefer to eat korean food"
+#cuisines = cuisine_extract(ui)
+#print(cuisines)

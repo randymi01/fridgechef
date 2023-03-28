@@ -12,3 +12,5 @@ ToDo (soft deadline this Sunday):
 5. Fix food entity extractor - Randy
 6. Improve recommender - Kyle, Jacob, Liam, Randy
 7. Put entity extraction in chatbot - Alex
+
+Note for later: Seems like you have to run "python -m spacy download en_core_web_sm"?
