@@ -1,10 +1,11 @@
 import numpy as np
 import intent_classification.yn as yn
-import entity_extraction.food_extractor as food_extractor # NOT BEING USED AT THE MOMENT
+import entity_extraction.food_extractor as food_extractor 
 import recommender.recommender as recommender
 import json
 import entity_extraction.entity_extract as entity_extract
 import entity_extraction.cuisine_extract as cuisine_extract
+import secret.py as secret
 
 class node:
     def __init__(self, prompt: str):
@@ -187,8 +188,11 @@ class walker:
 n0_start = output_node("Hello, Welcome to FridgeChef")
 
 n1_first_time = intent_node("Is this your first time using FridgeChef?", yn.yn_intent)
-n2_dietary_restrictions = entity_extraction_node("Do you have any dietary restrictions?", entity_extract.food_extract, "diet")
-n3_ingredients = entity_extraction_node("What ingredients do you have?",entity_extract.food_extract, "ingredients")
+
+# temporarily using old food extractor for testing
+n2_dietary_restrictions = entity_extraction_node("Do you have any dietary restrictions?", food_extractor.food_extractor, "diet")
+n3_ingredients = entity_extraction_node("What ingredients do you have?",food_extractor.food_extractor, "ingredients")
+
 n4_preference = entity_extraction_node("Do you have a cuisine preference? (leave blank if no preference)", cuisine_extract.cuisine_extract, "cuisine")
 
 n5_output_recipe = recipe_query_node("Here is your recipe")

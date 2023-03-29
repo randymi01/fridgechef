@@ -826,5 +826,26 @@
             "cuisine": []
         },
         "length": 44
+    },
+    {
+        "responses": [
+            null,
+            "nope",
+            "chicken",
+            "no",
+            null,
+            "nope",
+            null,
+            null,
+            "yes",
+            null
+        ],
+        "entities": {
+            "ingredients": [
+                "chicken"
+            ],
+            "cuisine": []
+        },
+        "length": 10
     }
 ]
