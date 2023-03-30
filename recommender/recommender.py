@@ -1,4 +1,9 @@
 import requests
+import os,sys,inspect
+current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parent_dir = os.path.dirname(current_dir)
+sys.path.insert(0, parent_dir) 
+import secret
 
 # Improvement Ideas:
 # 1. Fetch top X missing and top X used and bottom X missing and bottom X used (X = count)
@@ -107,7 +112,7 @@ def make_request(ingredients, count, diet, cuisine, mode):
     ingredients_str = list_to_str(ingredients)
 
     # Initialize parameters. Required items stated here
-    PARAMS = {'apiKey': '10060e3f2d1a4d3d867e05e25e50ecb4',
+    PARAMS = {'apiKey': secret.SPOON_AUTH,
               'includeIngredients': ingredients_str,
               'fillIngredients': True,
               'instructionsRequired': True,
