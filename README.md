@@ -17,7 +17,7 @@ ToDo (soft deadline this Sunday):
 
 Reach goals
 1. Parameter for if you can run to grocery store
-2. Integrate al different allergies questions, query incldues all parameters
+2. Integrate all different allergies questions, query includes all parameters - Kevin, Alex
 3. MongoDB save dietary restrictions
 4. Improve food entity extractor - Randy, Liam
 5. Improve recommender - Kyle, Jacob, Liam, Randy
