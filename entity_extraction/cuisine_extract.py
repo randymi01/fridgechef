@@ -5,7 +5,7 @@ nlp = spacy.load("en_core_web_sm")
 
 def cuisine_extract(user_input):
     # Define the cuisine names
-    cuisines = ["african", "american", "aritish", "cajun", "caribbean", "chinese", 
+    cuisines = ["african", "american", "british", "cajun", "caribbean", "chinese", 
                 "eastern european", "european", "french", "german", "greek", "indian", 
                 "irish", "italian", "japanese", "jewish", "korean", "latin american", 
                 "mediterranean", "mexican", "middle eastern", "nordic", "southern", "spanish", "thai", "vietnamese"]
