@@ -5,7 +5,7 @@ import recommender.recommender as recommender
 import json
 import entity_extraction.entity_extract as entity_extract
 import entity_extraction.cuisine_extract as cuisine_extract
-import secret.py as secret
+import secret as secret
 
 class node:
     def __init__(self, prompt: str):
@@ -160,7 +160,6 @@ class walker:
         while not self.end_flag:
             # perform a query when we reach a recipe query node
             if isinstance(self.current, recipe_query_node):
-                print(self.json_obj["entities"])
                 self.current.query(self.json_obj["entities"])
             self.current.actions()
             self.json_obj["responses"].append(self.current.get_response())
@@ -190,7 +189,7 @@ n0_start = output_node("Hello, Welcome to FridgeChef")
 n1_first_time = intent_node("Is this your first time using FridgeChef?", yn.yn_intent)
 
 # temporarily using old food extractor for testing
-n2_dietary_restrictions = entity_extraction_node("Do you have any dietary restrictions?", food_extractor.food_extractor, "diet")
+n2_dietary_restrictions = entity_extraction_node("Do you have any food allergies?", food_extractor.food_extractor, "diet")
 n3_ingredients = entity_extraction_node("What ingredients do you have?",food_extractor.food_extractor, "ingredients")
 
 n4_preference = entity_extraction_node("Do you have a cuisine preference? (leave blank if no preference)", cuisine_extract.cuisine_extract, "cuisine")

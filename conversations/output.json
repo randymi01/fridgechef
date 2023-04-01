@@ -847,5 +847,72 @@
             "cuisine": []
         },
         "length": 10
+    },
+    {
+        "responses": [
+            null,
+            "nope",
+            "cheese banana egg",
+            "",
+            null,
+            "exit",
+            null,
+            null,
+            "yes",
+            null
+        ],
+        "entities": {
+            "ingredients": [
+                "cheese",
+                "banana egg"
+            ],
+            "cuisine": []
+        },
+        "length": 10
+    },
+    {
+        "responses": [
+            null,
+            "yes",
+            "i'm vegetarian",
+            "cheese bananas, eggs",
+            "",
+            null,
+            "yes",
+            null
+        ],
+        "entities": {
+            "diet": [],
+            "ingredients": [
+                "cheese",
+                "bananas eggs"
+            ],
+            "cuisine": []
+        },
+        "length": 8
+    },
+    {
+        "responses": [
+            null,
+            "yes",
+            "i'm vegetarian and vegan",
+            "cheese bananas eggs, tomatoes",
+            "",
+            null,
+            "yes",
+            null
+        ],
+        "entities": {
+            "diet": [
+                "vega"
+            ],
+            "ingredients": [
+                "cheese",
+                "bananas",
+                "eggs tomatoes"
+            ],
+            "cuisine": []
+        },
+        "length": 8
     }
 ]
