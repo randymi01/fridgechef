@@ -83,7 +83,7 @@ def score_recipe(recipe):
 
     return score
 
-def make_request(ingredients, count, diet, cuisine, mode):
+def make_request(ingredients, count, allergies, diet, intolerances, cuisine, mode):
     """
     mode (int) - 0 = asc missing, 1 = desc missing, 2 = asc used, 3 = desc used
     See get_recs for descriptions of all other inputs
@@ -129,6 +129,12 @@ def make_request(ingredients, count, diet, cuisine, mode):
 
     if cuisine is not None:
         PARAMS['cuisine'] = list_to_str(cuisine)
+    
+    if allergies is not None:
+        PARAMS['excludeIngredients'] = list_to_str(allergies)
+    
+    if intolerances is not None:
+        PARAMS['intolerances'] = list_to_str(intolerances)
       
     # sending get request and saving the response as response object
     r = requests.get(url = URL, params = PARAMS)
@@ -168,7 +174,7 @@ def get_best(data, count):
         return sorted_data # Return all of them
 
 
-def get_recs(ingredients, count=1, diet=None, cuisine=None):
+def get_recs(ingredients, count=1, allergies=None, diet=None, intolerances=None, cuisine=None):
     """
     Parameters:
 
@@ -195,10 +201,10 @@ def get_recs(ingredients, count=1, diet=None, cuisine=None):
     elif count < 0:
         return []
     
-    data0 = make_request(ingredients, count, diet, cuisine, 0)
-    data1 = make_request(ingredients, count, diet, cuisine, 1)
-    data2 = make_request(ingredients, count, diet, cuisine, 2)
-    data3 = make_request(ingredients, count, diet, cuisine, 3)
+    data0 = make_request(ingredients, count, allergies, diet, intolerances, cuisine, 0)
+    data1 = make_request(ingredients, count, allergies, diet, intolerances, cuisine, 1)
+    data2 = make_request(ingredients, count, allergies, diet, intolerances, cuisine, 2)
+    data3 = make_request(ingredients, count, allergies, diet, intolerances, cuisine, 3)
 
     # Filter duplicate recipes
     data = filter_and_combine(data0, data1, data2, data3) # Final set of recipes to decide from

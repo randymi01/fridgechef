@@ -5,6 +5,8 @@ import recommender.recommender as recommender
 import json
 import entity_extraction.entity_extract as entity_extract
 import entity_extraction.cuisine_extract as cuisine_extract
+import entity_extraction.diet_extract as diet_extract
+import entity_extraction.intolerance_extract as intolerance_extract
 import secret as secret
 
 class node:
@@ -47,17 +49,23 @@ class recipe_query_node(output_node):
         # once we get cuisine preferences and restrictions, add here
         if self.times_visited == 0:
             ingredients = []
-            dietary_restrictions = []
-            cuisine_preferences = []
+            diet = None
+            cuisine_preferences = None
+            allergies = None
+            intolerances = None
             # uncomment below for final build potentially
             #try:
             if "ingredients" in entities:
                 ingredients = entities["ingredients"]
+            if "allergies" in entities:
+                allergies = entities["allergies"]
             if "diet" in entities:
-                dietary_restrictions = entities["diet"]
+                diet = entities["diet"]
+            if "intolerances" in entities:
+                intolerances = entities["intolerances"]
             if "cuisine" in entities:
                 cuisine_preferences = entities["cuisine"]
-            self.recipes = recommender.get_recs(ingredients, count=self.recipes_to_get, diet=dietary_restrictions, cuisine=cuisine_preferences)
+            self.recipes = recommender.get_recs(ingredients, count=self.recipes_to_get, allergies=allergies, diet=diet, intolerances=intolerances, cuisine=cuisine_preferences)
             #except:
             #    print("Error: Fridgechef is not working right now, come back later.")
             #    exit(1)
@@ -143,6 +151,24 @@ class entity_extraction_node(node):
         self.prompt()
 
 
+class dietary_restrictions_node(node):
+    def __init__(self, prompt: str):
+        super().__init__(prompt)
+    
+    def get_entity(self):
+        dietary_restrictions = []
+        dietary_restrictions.append(entity_extract.food_extract(self._response))
+        dietary_restrictions.append(diet_extract.diet_extract(self._response))
+        dietary_restrictions.append(intolerance_extract.intolerance_extract(self._response))
+        for l in dietary_restrictions:
+            if type(l) != list:
+                raise Exception(f"Extraction function must return a list of entities")
+        return dietary_restrictions
+    
+    def actions(self):
+        self.prompt()
+
+
 class walker:
     def __init__(self, root, json_path):
         self.current = root
@@ -165,6 +191,11 @@ class walker:
             self.json_obj["responses"].append(self.current.get_response())
             if isinstance(self.current, entity_extraction_node):
                 self.json_obj["entities"][self.current.entity_name] = self.current.get_entity()
+            if isinstance(self.current, dietary_restrictions_node):
+                dietary_restrictions = self.current.get_entity()
+                self.json_obj["entities"]["allergies"] = dietary_restrictions[0]
+                self.json_obj["entities"]["diets"] = dietary_restrictions[1]
+                self.json_obj["entities"]["intolerances"] = dietary_restrictions[2]
             self.current = self.current.get_child()
             self.node_number += 1
             if self.current == None:
@@ -189,7 +220,7 @@ n0_start = output_node("Hello, Welcome to FridgeChef")
 n1_first_time = intent_node("Is this your first time using FridgeChef?", yn.yn_intent)
 
 # temporarily using old food extractor for testing
-n2_dietary_restrictions = entity_extraction_node("Do you have any food allergies?", food_extractor.food_extractor, "diet")
+n2_dietary_restrictions = dietary_restrictions_node("Do you have any dietary restrictions? (We will do our best to accomodate)")
 n3_ingredients = entity_extraction_node("What ingredients do you have?",food_extractor.food_extractor, "ingredients")
 
 n4_preference = entity_extraction_node("Do you have a cuisine preference? (leave blank if no preference)", cuisine_extract.cuisine_extract, "cuisine")

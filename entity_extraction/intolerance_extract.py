@@ -3,7 +3,7 @@ import spacy
 # Load the pre-trained spaCy model
 nlp = spacy.load("en_core_web_sm")
 
-def intolernace_extract(user_input):
+def intolerance_extract(user_input):
     # Define the cuisine names
     intolerances = ["dairy", "egg", "gluten", "grain", "peanut", "seafood", "sesame", "shellfish", "soy", "sulfite", "tree nut", "wheat",
                     "nut", "nuts"]

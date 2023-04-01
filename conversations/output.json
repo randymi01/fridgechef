@@ -914,5 +914,69 @@
             "cuisine": []
         },
         "length": 8
+    },
+    {
+        "responses": [
+            null,
+            "yes",
+            "i am vegetarian and allergic to bananas",
+            "eggs cheese walnuts apples",
+            "",
+            null,
+            "yes",
+            null
+        ],
+        "entities": {
+            "allergies": [
+                "allergic"
+            ],
+            "diets": [
+                "vegetarian"
+            ],
+            "intolerances": [],
+            "ingredients": [
+                "eggs",
+                "cheese"
+            ],
+            "cuisine": []
+        },
+        "length": 8
+    },
+    {
+        "responses": [
+            null,
+            "yes",
+            "i'm vegan and gluten free. I'm also allergic to apples",
+            "bananas, bread, tomatoes",
+            "",
+            null,
+            "no",
+            null,
+            null,
+            "no",
+            null,
+            null,
+            "no",
+            null,
+            null,
+            "yes",
+            null
+        ],
+        "entities": {
+            "allergies": [],
+            "diets": [
+                "vegan",
+                "Gluten Free"
+            ],
+            "intolerances": [
+                "gluten"
+            ],
+            "ingredients": [
+                "bananas",
+                "bread tomatoes"
+            ],
+            "cuisine": []
+        },
+        "length": 17
     }
 ]
