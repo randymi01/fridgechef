@@ -1,7 +1,7 @@
 from recommender import get_recs
 
-ingredients = ["chicken", "bread", "tomato", "cheese"]
+ingredients = ["pasta", "tomatoes", "chicken", "parmesan cheese", "beef"]
 
-recs = get_recs(ingredients, count=2)
+recs = get_recs(ingredients, count=1)
 
 print(recs)
