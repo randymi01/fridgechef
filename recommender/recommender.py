@@ -5,22 +5,59 @@ parent_dir = os.path.dirname(current_dir)
 sys.path.insert(0, parent_dir) 
 import secret
 
-# Improvement Ideas:
-# 1. Fetch top X missing and top X used and bottom X missing and bottom X used (X = count)
-# 1b. Filter any possible matching recipes
-# 2. Sort by custom scoring algorithm (Can use one from before)
-# 3. Return top 'count' recipes
+# TODO: Add support for intolerances
+# TODO: Play with scoring function to see what improvements can be made
 
-# Ignore 'offset' for now. More logic can be implemented later if necessary
+# Revision history
+# 4/1/23 (Kyle) - Added more queries! For every user input ingredient, we query spoonacular for similar ingredients to capture more possible
+# recipes and ingredients (ie: chicken becomes chicken breast, chicken thigh, chicken broth, chicken feet, chicken nugget...)
+# 4/1/23 (Kyle) - Added much lower limits for the get_recs() function. Only returns 1 recipe recommendation and only 7 user ingredients allowed.
+# This is only for testing purposes... with so many queries, we hit our daily quota pretty quickly
+# 4/1/23 (Kyle) - modified scoring function. Changed parameters and also added to the score if there are more ingredients in the recipe (total / 2)
+token = secret.SPOON_AUTH
 
 def list_to_str(my_list):
     list_str = ""
     for item in my_list:
-        item = item.replace(" ", "_")
+        #item = item.replace(" ", "_")
         list_str += item + ","
     # Remove trailing comma
     list_str = list_str[0:len(list_str) - 1]
     return list_str
+
+def make_ingr_request(ingredient):
+    URL = "https://api.spoonacular.com/food/ingredients/search"
+
+    # Initialize parameters. Required items stated here
+    PARAMS = {'apiKey': token,
+              'query': ingredient,
+              'number': 20} # Adding to this number does not harm our query limit
+      
+    # sending get request and saving the response as response object
+    r = requests.get(url = URL, params = PARAMS)
+      
+    # extracting data in json format
+    data = r.json()
+
+    print(f"Data ({ingredient}) : {data['results']} \n \n ")
+    return data
+
+def improve_ingredients(ingredients):
+    new_ingrs = set()
+    for user_ingr in ingredients:
+        user_ingr = user_ingr.lower()
+        # Add original queried ingredient
+        new_ingrs.add(user_ingr)
+        # Skip query for ingredients that have more than one word already - helps reduce unnecessary queries/ingredients
+        if len(user_ingr.split()) > 1:
+            continue
+        data = make_ingr_request(user_ingr)
+        # Add variations of ingredient
+        for result in data['results']:
+            name = result['name']
+            if len(name.split()) <= 2: # Only add ingredients with up to 2 words (filters out things that are too specific)
+                new_ingrs.add(name.lower())
+    return new_ingrs
 
 
 def get_calories(recipe_or_ingr):
@@ -69,14 +106,16 @@ def score_recipe(recipe):
     num_used_essential, num_missing_essential = get_essentials_info(recipe)
     num_used_noness = recipe['usedIngredientCount'] - num_used_essential
     num_missed_noness = recipe['missedIngredientCount'] - num_missing_essential
+    # Used to help get recipes with more ingredients in results
+    total = recipe['usedIngredientCount'] + recipe['missedIngredientCount']
 
     # Score settings
     missing_essential_mult = -3 # Missing penalized more than used
-    missing_noness_mult = -0.5
+    missing_noness_mult = 0
     used_essential_mult = 1
     used_noness_mult = 0.5
 
-    score = (missing_essential_mult*num_missing_essential
+    score = (total / 2) + (missing_essential_mult*num_missing_essential
               + missing_noness_mult*num_missed_noness
               + used_essential_mult*num_used_essential
               + used_noness_mult*num_used_noness)
@@ -85,25 +124,18 @@ def score_recipe(recipe):
 
 def make_request(ingredients, count, diet, cuisine, mode):
     """
-    mode (int) - 0 = asc missing, 1 = desc missing, 2 = asc used, 3 = desc used
+    mode (int) - 0 = asc missing, 1 = asc used
     See get_recs for descriptions of all other inputs
     """
     
-    # TODO: Play with how many recipes and of what type should be fetched. And play with scoring function (it seems biased against one of the sort strategies)
     if mode == 0:
         sort = "min-missing-ingredients"
         direction = "asc"
     elif mode == 1:
-        sort = "random" # NOTE: Desc sort direction seems to be broken. Using random instead to get some extra possibilities
-        direction = "asc"
-    elif mode == 2:
         sort = "max-used-ingredients"
         direction = "asc"
-    elif mode == 3:
-        sort = "random" # NOTE: Desc sort direction seems to be broken. Using random instead to get some extra possibilities
-        direction = "asc"
     else:
-        print(f"Error: Invalid mode. Specified {mode}. Mode must be an integer in range 0-3")
+        print(f"Error: Invalid mode. Specified {mode}. Mode must be an integer in range 0-1")
         return None
     
     URL = "https://api.spoonacular.com/recipes/complexSearch"
@@ -112,7 +144,7 @@ def make_request(ingredients, count, diet, cuisine, mode):
     ingredients_str = list_to_str(ingredients)
 
     # Initialize parameters. Required items stated here
-    PARAMS = {'apiKey': secret.SPOON_AUTH,
+    PARAMS = {'apiKey': token,
               'includeIngredients': ingredients_str,
               'fillIngredients': True,
               'instructionsRequired': True,
@@ -129,12 +161,19 @@ def make_request(ingredients, count, diet, cuisine, mode):
 
     if cuisine is not None:
         PARAMS['cuisine'] = list_to_str(cuisine)
+
       
     # sending get request and saving the response as response object
     r = requests.get(url = URL, params = PARAMS)
       
     # extracting data in json format
     data = r.json()
+
+    # Add sort and sort direction data - TODO: REMOVE, DEBUG ONLY
+    print(f"Found {len(data['results'])} results")
+    for recipe in data['results']:
+        recipe['mySort'] = sort
+        recipe['myDirection'] = direction
 
     return data
 
@@ -156,6 +195,7 @@ def get_best(data, count):
     # Score all recipes
     for recipe in data:
         score = score_recipe(recipe)
+        print(f"Score ({recipe['id']}): {score} ")
         recipe['score'] = score
 
     # Sort them
@@ -189,26 +229,40 @@ def get_recs(ingredients, count=1, diet=None, cuisine=None):
                 data['results'][i]['ingredients'] - list of 3 tuples (name (str), amount (float), unit (str))
                 data['results'][i]['instructions'] - ordered string list of instructions
     """
-    # Check count bounds
-    if count > 40:
-        count = 40
+
+    ### DAILY QUOTA LIMIT CHECKS - used to ensure daily quota isn't reached too quickly
+
+    # Check count bounds - NOTE: Don't change please until closer to demo. For reference, each request with count = 2 requires ~ 1/25th of our daily quota points
+    if count > 1:
+        count = 1
     elif count < 0:
         return []
     
+    # Trim list, again for daily quota. Can be removed later on
+    if len(ingredients) > 7:
+        ingredients = ingredients[0:7] # Trim list
+
+    ### END DAILY QUOTA LIMIT CHECKS
+    
+    # Create new list of ingredients based on user input. Finds similar ingredients and appends to original ingredients list
+    ingredients = improve_ingredients(ingredients)
+
+    #print(f"New ingr: {ingredients}")
+    
     data0 = make_request(ingredients, count, diet, cuisine, 0)
     data1 = make_request(ingredients, count, diet, cuisine, 1)
-    data2 = make_request(ingredients, count, diet, cuisine, 2)
-    data3 = make_request(ingredients, count, diet, cuisine, 3)
 
     # Filter duplicate recipes
-    data = filter_and_combine(data0, data1, data2, data3) # Final set of recipes to decide from
+    data = filter_and_combine(data0, data1) # Final set of recipes to decide from
 
     #print(f"Unscored data: {data} \n \n ")
 
     # Score recipes to find top 'count' highest
     data = get_best(data, count)
 
-    print(f"Best data: {data} \n \n ")
+    print("Best recipe data:")
+    for recipe in data:
+        print(f"  Id: {recipe['id']} sort: {recipe['mySort']} dir: {recipe['myDirection']}")
 
     # Loop through results
     results = []
