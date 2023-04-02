@@ -4,6 +4,7 @@ current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfra
 parent_dir = os.path.dirname(current_dir)
 sys.path.insert(0, parent_dir) 
 import secret
+import threading
 
 # TODO: Add support for intolerances
 # TODO: Play with scoring function to see what improvements can be made
@@ -14,6 +15,7 @@ import secret
 # 4/1/23 (Kyle) - Added much lower limits for the get_recs() function. Only returns 1 recipe recommendation and only 7 user ingredients allowed.
 # This is only for testing purposes... with so many queries, we hit our daily quota pretty quickly
 # 4/1/23 (Kyle) - modified scoring function. Changed parameters and also added to the score if there are more ingredients in the recipe (total / 2)
+# 4/2/23 (Kyle) - parallelize calls to spoonacular api
 token = secret.SPOON_AUTH
 
 def list_to_str(my_list):
@@ -25,7 +27,7 @@ def list_to_str(my_list):
     list_str = list_str[0:len(list_str) - 1]
     return list_str
 
-def make_ingr_request(ingredient):
+def make_ingr_request(ingredient, results):
     URL = "https://api.spoonacular.com/food/ingredients/search"
 
     # Initialize parameters. Required items stated here
@@ -40,10 +42,12 @@ def make_ingr_request(ingredient):
     data = r.json()
 
     print(f"Data ({ingredient}) : {data['results']} \n \n ")
-    return data
+    results.append(data)
 
 def improve_ingredients(ingredients):
     new_ingrs = set()
+    threads = []
+    datas = []
     for user_ingr in ingredients:
         user_ingr = user_ingr.lower()
         # Add original queried ingredient
@@ -51,7 +55,16 @@ def improve_ingredients(ingredients):
         # Skip query for ingredients that have more than one word already - helps reduce unnecessary queries/ingredients
         if len(user_ingr.split()) > 1:
             continue
-        data = make_ingr_request(user_ingr)
+        # Make query in new thread
+        t = threading.Thread(target=make_ingr_request, args=(user_ingr, datas))
+        threads.append(t)
+        t.start()
+
+    # Wait for all threads to finish
+    for t in threads:
+        t.join()
+
+    for data in datas:
         # Add variations of ingredient
         for result in data['results']:
             name = result['name']
@@ -122,7 +135,7 @@ def score_recipe(recipe):
 
     return score
 
-def make_request(ingredients, count, allergies, diet, intolerances, cuisine, mode):
+def make_request(ingredients, count, allergies, diet, intolerances, cuisine, mode, results):
     """
     mode (int) - 0 = asc missing, 1 = asc used
     See get_recs for descriptions of all other inputs
@@ -136,7 +149,6 @@ def make_request(ingredients, count, allergies, diet, intolerances, cuisine, mod
         direction = "asc"
     else:
         print(f"Error: Invalid mode. Specified {mode}. Mode must be an integer in range 0-1")
-        return None
     
     URL = "https://api.spoonacular.com/recipes/complexSearch"
     
@@ -180,9 +192,9 @@ def make_request(ingredients, count, allergies, diet, intolerances, cuisine, mod
         recipe['mySort'] = sort
         recipe['myDirection'] = direction
 
-    return data
+    results.append(data)
 
-def filter_and_combine(*queries):
+def filter_and_combine(queries):
     ids = set()
     filtered_recipes = []
     for query in queries:
@@ -254,11 +266,23 @@ def get_recs(ingredients, count=1, allergies=None, diet=None, intolerances=None,
 
     #print(f"New ingr: {ingredients}")
     
-    data0 = make_request(ingredients, count, allergies, diet, intolerances, cuisine, 0)
-    data1 = make_request(ingredients, count, allergies, diet, intolerances, cuisine, 1)
+    threads = []
+    results = []
+    
+    t0 = threading.Thread(target=make_request, args=(ingredients, count, allergies, diet, intolerances, cuisine, 0, results))
+    threads.append(t0)
+    t0.start()
+
+    t1 = threading.Thread(target=make_request, args=(ingredients, count, allergies, diet, intolerances, cuisine, 1, results))
+    threads.append(t1)
+    t1.start()
+
+    # Wait for all threads to finish
+    for t in threads:
+        t.join()
 
     # Filter duplicate recipes
-    data = filter_and_combine(data0, data1) # Final set of recipes to decide from
+    data = filter_and_combine(results) # Final set of recipes to decide from
 
     #print(f"Unscored data: {data} \n \n ")
 
