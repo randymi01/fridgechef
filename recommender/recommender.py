@@ -17,12 +17,12 @@ import threading
 # 4/1/23 (Kyle) - modified scoring function. Changed parameters and also added to the score if there are more ingredients in the recipe (total / 2)
 # 4/2/23 (Kyle) - parallelize calls to spoonacular api
 # 4/2/23 (Jacob) - Small change to boost recipes with all essential ingredients
+# 4/3/23 (Kyle) - Fixed ranking in incorrect order.
 token = secret.SPOON_AUTH
 
 def list_to_str(my_list):
     list_str = ""
     for item in my_list:
-        #item = item.replace(" ", "_")
         list_str += item + ","
     # Remove trailing comma
     list_str = list_str[0:len(list_str) - 1]
@@ -219,14 +219,53 @@ def get_best(data, count):
         print(f"Score ({recipe['id']}): {score} ")
         recipe['score'] = score
 
-    # Sort them
-    sorted_data = sorted(data, key=lambda d: d['score'])
+    # Sort them by score (descending)
+    sorted_data = sorted(data, key=lambda d: -1*d['score'])
 
     # Return top 'count'
     if len(sorted_data) >= count:
+        print(f"Ruled out: {extract_recs(sorted_data[0:len(sorted_data)])} \n \n ")
         return sorted_data[0:count]
     else:
         return sorted_data # Return all of them
+    
+def extract_recs(data):
+    # Loop through results
+    results = []
+    for result in data:
+
+        # Add ingredients list
+        ingredients = []
+        for ingredient in result['extendedIngredients']:
+            ingredients.append((ingredient['nameClean'], float(ingredient['amount']), ingredient['unit']))
+
+        # Add instructions - 
+        instructions = []
+        if len(result['analyzedInstructions']) > 0: # added this to prevent error when recipe has no instructions, which I was getting earlier but I have no longer??
+            for instruction in result['analyzedInstructions'][0]['steps']:
+                instructions.append(instruction['step'])
+
+
+        recommendation = {
+            'title': result['title'],
+            'readyInMinutes': result['readyInMinutes'],
+            'servings': result['servings'],
+            'usedIngredientCount': result['usedIngredientCount'],
+            'missedIngredientCount': result['missedIngredientCount'],
+            'ingredients': ingredients,
+            'instructions': instructions,
+            'score': result['score'],
+            'id': result['id'],
+        }
+
+        results.append(recommendation)
+
+
+    recommendations = {
+        'number': len(data),
+        'results': results
+    }
+    return recommendations
 
 
 def get_recs(ingredients, count=1, allergies=None, diet=None, intolerances=None, cuisine=None):
@@ -266,7 +305,7 @@ def get_recs(ingredients, count=1, allergies=None, diet=None, intolerances=None,
     ### END DAILY QUOTA LIMIT CHECKS
     
     # Create new list of ingredients based on user input. Finds similar ingredients and appends to original ingredients list
-    ingredients = improve_ingredients(ingredients)
+    #ingredients = improve_ingredients(ingredients) # TODO: Re-add for demo?
 
     #print(f"New ingr: {ingredients}")
     
@@ -297,38 +336,6 @@ def get_recs(ingredients, count=1, allergies=None, diet=None, intolerances=None,
     for recipe in data:
         print(f"  Id: {recipe['id']} sort: {recipe['mySort']} dir: {recipe['myDirection']}")
 
-    # Loop through results
-    results = []
-    for result in data:
 
-        # Add ingredients list
-        ingredients = []
-        for ingredient in result['extendedIngredients']:
-            ingredients.append((ingredient['nameClean'], float(ingredient['amount']), ingredient['unit']))
-
-        # Add instructions - 
-        instructions = []
-        if len(result['analyzedInstructions']) > 0: # added this to prevent error when recipe has no instructions, which I was getting earlier but I have no longer??
-            for instruction in result['analyzedInstructions'][0]['steps']:
-                instructions.append(instruction['step'])
-
-
-        recommendation = {
-            'title': result['title'],
-            'readyInMinutes': result['readyInMinutes'],
-            'servings': result['servings'],
-            'usedIngredientCount': result['usedIngredientCount'],
-            'missedIngredientCount': result['missedIngredientCount'],
-            'ingredients': ingredients,
-            'instructions': instructions
-        }
-
-        results.append(recommendation)
-
-
-    recommendations = {
-        'number': len(data),
-        'results': results
-    }
-
+    recommendations = extract_recs(data)
     return recommendations
