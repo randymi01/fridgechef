@@ -16,6 +16,7 @@ import threading
 # This is only for testing purposes... with so many queries, we hit our daily quota pretty quickly
 # 4/1/23 (Kyle) - modified scoring function. Changed parameters and also added to the score if there are more ingredients in the recipe (total / 2)
 # 4/2/23 (Kyle) - parallelize calls to spoonacular api
+# 4/2/23 (Jacob) - Small change to boost recipes with all essential ingredients
 token = secret.SPOON_AUTH
 
 def list_to_str(my_list):
@@ -132,6 +133,9 @@ def score_recipe(recipe):
               + missing_noness_mult*num_missed_noness
               + used_essential_mult*num_used_essential
               + used_noness_mult*num_used_noness)
+
+    if num_missing_essential == 0:
+        score = score + 1
 
     return score
 
