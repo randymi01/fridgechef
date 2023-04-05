@@ -8,6 +8,16 @@ import entity_extraction.cuisine_extract as cuisine_extract
 import entity_extraction.diet_extract as diet_extract
 import entity_extraction.intolerance_extract as intolerance_extract
 import secret as secret
+from twilio.rest import Client
+import keys
+import http.server
+import socketserver
+from twilio.twiml.messaging_response import MessagingResponse
+import threading
+from flask import Flask, request
+import time
+
+globalResponse = ''
 
 class node:
     def __init__(self, prompt: str):
@@ -23,7 +33,18 @@ class node:
         return self.child
 
     def prompt(self):
-        self._response = input("\n"+self._prompt + ": ")
+        # self._response = input("\n"+self._prompt + ": ")
+        # api call to get the response
+        client = Client(keys.account_sid, keys.auth_token)
+
+        message = client.messages.create(
+        body=self._prompt,
+        from_=keys.twilio_number,
+        to=keys.my_phone_number
+        )
+        print (message.body)
+        time.sleep(20)
+        self._response = globalResponse
 
     def get_response(self):
         return self._response
@@ -33,7 +54,15 @@ class node:
 
 class output_node(node):
     def prompt(self):
-        print("\n"+self._prompt)
+        # print("\n"+self._prompt)
+        client = Client(keys.account_sid, keys.auth_token)
+
+        message = client.messages.create(
+        body=self._prompt,
+        from_=keys.twilio_number,
+        to=keys.my_phone_number
+        )
+        print (message.body)
 
 class recipe_query_node(output_node):
     def __init__(self, prompt: str):
@@ -82,32 +111,51 @@ class recipe_query_node(output_node):
         recipe_time = self.recipes['results'][idx]['readyInMinutes']
         recipe_ingredients = self.recipes["results"][idx]['ingredients']
         recipe_instructions = self.recipes['results'][idx]['instructions']
-
+        
+        r = ''
+        r += "\n" + self._prompt
         print("\n"+self._prompt)
-        if recipe_title: 
+        if recipe_title:
+            r += "\n" + recipe_title + "\n" 
             print("\n"+recipe_title)
         if recipe_servings:
+            r += str(recipe_servings) + " servings\n"
             print(str(recipe_servings) + " servings")
         # if recipe time is greater than an hour, print the number of hours and minutes
         if int(recipe_time / 60) > 0:
+            r += str(int(recipe_time / 60)) + " hours " + str(recipe_time % 60) + " minutes\n\n"
             print(str(int(recipe_time / 60)) + " hours " + str(recipe_time % 60) + " minutes\n")
         else:
+            r += str(recipe_time % 60) + " minutes\n\n"
             print(str(recipe_time % 60) + " minutes\n")
         for item in recipe_ingredients:
             # prints num, unit, item, so like "2 tablespoons soy sauce"
             if item[0] and item[1] and item[2]:
+                r += str(item[1]) + " " + item[2] + " " + item[0] + "\n"
                 print(str(item[1]) + " " + item[2] + " " + item[0])
             # if units not provided, then just like "2 oranges"
             elif item[0] and item[1]:
+                r += str(item[1]) + " " + item[0] + "\n"
                 print(str(item[1]) + " " + item[0])
             # if quantity not provided, then just like "chocolate"
             elif item[0]:
+                r += str(item[0]) + "\n"
                 print(str(item[0]))
         # newline to separate ingredients from recipes
+        r += "\n"
         print()
         for num, line in enumerate(recipe_instructions):
             # prints numbered instructions, so like "1. boil water"
+            r += str(num + 1) + ". " + line + "\n"
             print(str(num + 1) + ". " + line)
+
+        client = Client(keys.account_sid, keys.auth_token)
+
+        message = client.messages.create(
+        body=r,
+        from_=keys.twilio_number,
+        to=keys.my_phone_number
+        )
 
 
 class intent_node(node):
@@ -242,6 +290,32 @@ n5_output_recipe.add_child(n6_like_recipe)
 n6_like_recipe.add_child(n7_yes, "POSITIVE")
 n6_like_recipe.add_child(n8_no, "NEGATIVE")
 n8_no.add_child(n5_output_recipe)
+
+app = Flask(__name__)
+
+
+@app.route('/sms', methods=['POST'])
+def sms_reply():
+
+    global globalResponse
+    # Get the incoming message
+    
+    globalResponse = request.form['Body']
+    
+    # Create a Twilio MessagingResponse object
+    resp = MessagingResponse()
+
+    # Add a message to the response
+    resp.message(f'You said: {globalResponse}')
+
+    # Return the response as TwiML
+    return str(resp)
+
+if __name__ == '__main__':
+    # app.run(host='0.0.0.0', port=8000, debug=False)
+    threading.Thread(target=lambda: app.run(host='0.0.0.0', port=8000, debug=False)).start()
+
+
 
 w = walker(n0_start, "conversations/output.json")
 w.traverse()
