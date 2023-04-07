@@ -978,5 +978,32 @@
             "cuisine": []
         },
         "length": 17
+    },
+    {
+        "responses": [
+            null,
+            "yes",
+            "i'm vegetarian",
+            "eggs banana cheese pepperoni",
+            "no",
+            null,
+            "yes",
+            null
+        ],
+        "entities": {
+            "allergies": [],
+            "diets": [
+                "vegetarian"
+            ],
+            "intolerances": [],
+            "ingredients": [
+                "eggs",
+                "banana",
+                "cheese",
+                "pepper"
+            ],
+            "cuisine": []
+        },
+        "length": 8
     }
 ]

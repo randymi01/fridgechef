@@ -21,3 +21,19 @@ Reach goals
 3. MongoDB save dietary restrictions
 4. Improve food entity extractor - Randy, Liam
 5. Improve recommender - Kyle, Jacob, Liam, Randy
+
+## Local build setup guide
+1. Pull repo, make and activate a python env, run the following commands in your terminal
+> pip install -r requirements.txt
+> python -m spacy download en_core_web_sm
+2. Get a [Spoonacular](https://spoonacular.com/food-api) authentication key, and a [Twilio](https://www.twilio.com/) SID, authentication key, and number. Make a secret.py file in the working directory and put the following in:
+> TWILIO_SID = "YOUR SID HERE"
+> TWILIO_AUTH = "YOUR AUTH KEY HERE"
+> SPOON_AUTH = "YOUR AUTH KEY HERE"
+>
+> twilio_number = 'YOUR TWILIO PHONE NUMBER HERE'
+> my_phone_number = 'YOUR PHPNE NUMBER HERE'
+3. Run main.py in the virtual env with "python main.py". At this point, you should receive a text message to your phone number from the twilio number.
+4. In a new terminal, install [ngrok](https://ngrok.com/) and run the following command to your computer (I use wsl, might be different for different os)
+> ngrok http 8000
+5. Running the command should generate a url which is a tunnel to your computer. Copy this url, then go to the Twilio website, log in, and edit the twilio number you used. Replace the webhook "HTTP POST" url with the ngrok url generated, followed by "/sms". You should now be able to text back the Twilio number and interact with the program.

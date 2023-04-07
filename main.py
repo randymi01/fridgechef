@@ -9,15 +9,15 @@ import entity_extraction.diet_extract as diet_extract
 import entity_extraction.intolerance_extract as intolerance_extract
 import secret as secret
 from twilio.rest import Client
-import keys
 import http.server
 import socketserver
+import socket
 from twilio.twiml.messaging_response import MessagingResponse
 import threading
 from flask import Flask, request
 import time
+import requests
 
-globalResponse = ''
 
 class node:
     def __init__(self, prompt: str):
@@ -33,18 +33,22 @@ class node:
         return self.child
 
     def prompt(self):
+        global globalResponse
+        globalResponse = ''
         # self._response = input("\n"+self._prompt + ": ")
         # api call to get the response
-        client = Client(keys.account_sid, keys.auth_token)
+        client = Client(secret.TWILIO_SID, secret.TWILIO_AUTH)
 
         message = client.messages.create(
         body=self._prompt,
-        from_=keys.twilio_number,
-        to=keys.my_phone_number
+        from_=secret.twilio_number,
+        to=secret.my_phone_number
         )
         print (message.body)
-        time.sleep(20)
+        while globalResponse == '':
+            time.sleep(1)
         self._response = globalResponse
+        globalResponse = ''
 
     def get_response(self):
         return self._response
@@ -55,12 +59,12 @@ class node:
 class output_node(node):
     def prompt(self):
         # print("\n"+self._prompt)
-        client = Client(keys.account_sid, keys.auth_token)
+        client = Client(secret.TWILIO_SID, secret.TWILIO_AUTH)
 
         message = client.messages.create(
         body=self._prompt,
-        from_=keys.twilio_number,
-        to=keys.my_phone_number
+        from_=secret.twilio_number,
+        to=secret.my_phone_number
         )
         print (message.body)
 
@@ -149,12 +153,12 @@ class recipe_query_node(output_node):
             r += str(num + 1) + ". " + line + "\n"
             print(str(num + 1) + ". " + line)
 
-        client = Client(keys.account_sid, keys.auth_token)
+        client = Client(secret.TWILIO_SID, secret.TWILIO_AUTH)
 
         message = client.messages.create(
         body=r,
-        from_=keys.twilio_number,
-        to=keys.my_phone_number
+        from_=secret.twilio_number,
+        to=secret.my_phone_number
         )
 
 
@@ -294,13 +298,12 @@ n8_no.add_child(n5_output_recipe)
 app = Flask(__name__)
 
 
-@app.route('/sms', methods=['POST'])
+@app.route('/sms', methods=['POST', 'GET'])
 def sms_reply():
-
     global globalResponse
     # Get the incoming message
     
-    globalResponse = request.form['Body']
+    globalResponse = request.values.get('Body', None)
     
     # Create a Twilio MessagingResponse object
     resp = MessagingResponse()
@@ -312,8 +315,10 @@ def sms_reply():
     return str(resp)
 
 if __name__ == '__main__':
+    global globalResponse
+    globalResponse = ''
     # app.run(host='0.0.0.0', port=8000, debug=False)
-    threading.Thread(target=lambda: app.run(host='0.0.0.0', port=8000, debug=False)).start()
+    threading.Thread(target=lambda: app.run(host='localhost', port=8000, debug=False)).start()
 
 
 
