@@ -1087,5 +1087,190 @@
             "cuisine": []
         },
         "length": 7
+    },
+    {
+        "responses": [
+            null,
+            "i'm vegetarian and gluten free and allergic to black beans",
+            "tomato basil feta, onion, garlic, ground beef, mushrooms",
+            "no",
+            null,
+            "yes",
+            null
+        ],
+        "entities": {
+            "allergies": [
+                "allergic"
+            ],
+            "diets": [
+                "vegetarian",
+                "Gluten Free"
+            ],
+            "intolerances": [
+                "gluten"
+            ],
+            "ingredients": [
+                "tomato",
+                "basil",
+                "fe",
+                "##ta onion",
+                "garlic",
+                "ground beef mushrooms"
+            ],
+            "cuisine": []
+        },
+        "length": 7
+    },
+    {
+        "responses": [
+            null,
+            "no",
+            "cheese banana pepper",
+            "no",
+            null,
+            "yes",
+            null
+        ],
+        "entities": {
+            "ingredients": [
+                "cheese",
+                "banana pepper"
+            ],
+            "cuisine": []
+        },
+        "length": 7
+    },
+    {
+        "responses": [
+            null,
+            "yes",
+            "I can't eat soy beans",
+            "parmesan, peppers, bread",
+            "no",
+            null,
+            "yes",
+            null
+        ],
+        "entities": {
+            "allergies": [],
+            "diets": [],
+            "intolerances": [
+                "soy"
+            ],
+            "ingredients": [
+                "par",
+                "##mes",
+                "##an peppers bread"
+            ],
+            "cuisine": []
+        },
+        "length": 8
+    },
+    {
+        "responses": [
+            null,
+            "i am vegetarian ",
+            "i have penne pasta, chicken, cheese, sun dried tomatoes, ground beef, salt and also pepper",
+            "yes, i like italian food",
+            null,
+            "No",
+            null,
+            null,
+            "yes",
+            null
+        ],
+        "entities": {
+            "allergies": [],
+            "diets": [
+                "vegetarian"
+            ],
+            "intolerances": [],
+            "ingredients": [
+                "penn",
+                "##e pasta",
+                "sun dried tomatoes",
+                "ground beef salt",
+                "pepper"
+            ],
+            "cuisine": [
+                "italian"
+            ]
+        },
+        "length": 10
+    },
+    {
+        "responses": [
+            null,
+            "I have no dietary restrictions ",
+            "I have butter onions milk pasta ground beef salt and garlic",
+            "No I do not",
+            null,
+            "yes",
+            null
+        ],
+        "entities": {
+            "allergies": [
+                "dietary restrictions"
+            ],
+            "diets": [],
+            "intolerances": [],
+            "ingredients": [
+                "butter onions",
+                "ground",
+                "beef salt",
+                "garlic"
+            ],
+            "cuisine": []
+        },
+        "length": 7
+    },
+    {
+        "responses": [
+            null,
+            "yes",
+            "i don't eat cheese and i'm gluten free",
+            "oranges, bread, tomatoes, garlic, onion",
+            "no",
+            null,
+            "yes",
+            null
+        ],
+        "entities": {
+            "allergies": [],
+            "diets": [
+                "Gluten Free"
+            ],
+            "intolerances": [
+                "gluten"
+            ],
+            "ingredients": [
+                "orange",
+                "##s",
+                "bread",
+                "garlic onion"
+            ],
+            "cuisine": []
+        },
+        "length": 8
+    },
+    {
+        "responses": [
+            null,
+            "no",
+            "garlic onion, tomato, cheese, oranges",
+            "no",
+            null,
+            "yes",
+            null
+        ],
+        "entities": {
+            "ingredients": [
+                "garlic",
+                "tomato",
+                "cheese oranges"
+            ],
+            "cuisine": []
+        },
+        "length": 7
     }
 ]
