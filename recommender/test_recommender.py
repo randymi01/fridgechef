@@ -15,8 +15,11 @@ from recommender import get_recs
 # print(f"\n \n Allergies: {recs['results'][0]}")
 
 # Picky eater (Chinese) - looks good 
-ingredients = ["noodles", "soy sauce", "oyster sauce", "brown rice", "corn", "chicken", "garlic", "eggs", "onion", "scallions", "ginger"]
-recs = get_recs(ingredients, count=30, allergies="Nuts", diet=None, intolerances="Peanut,Shellfish", cuisine="Chinese")
-print(f"\n \n Allergies (Chinese): {recs['results'][0]}")
+# ingredients = ["noodles", "soy sauce", "oyster sauce", "brown rice", "corn", "chicken", "garlic", "eggs", "onion", "scallions", "ginger"]
+# recs = get_recs(ingredients, count=30, allergies="Nuts", diet=None, intolerances="Peanut,Shellfish", cuisine="Chinese")
+# print(f"\n \n Allergies (Chinese): {recs['results'][0]}")
 
-# Strong cuisine preference
+# Strong cuisine preference - looks good
+# ingredients = ["tomato", "chicken", "red wine", "swiss cheese", "garlic", "bread", "potatoes", "shrimp", "olive oil"]
+# recs = get_recs(ingredients, count=30, cuisine="Mediterranean")
+# print(f"\n \n Strong cuisine pref: {recs['results'][0]}")
