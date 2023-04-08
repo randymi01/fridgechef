@@ -25,14 +25,19 @@ Reach goals
 ## Local build setup guide
 1. Pull repo, make and activate a python env, run the following commands in your terminal
 > pip install -r requirements.txt
+>
 > python -m spacy download en_core_web_sm
 2. Get a [Spoonacular](https://spoonacular.com/food-api) authentication key, and a [Twilio](https://www.twilio.com/) SID, authentication key, and number. Make a secret.py file in the working directory and put the following in:
 > TWILIO_SID = "YOUR SID HERE"
+>
 > TWILIO_AUTH = "YOUR AUTH KEY HERE"
+>
 > SPOON_AUTH = "YOUR AUTH KEY HERE"
 >
+>
 > twilio_number = 'YOUR TWILIO PHONE NUMBER HERE'
-> my_phone_number = 'YOUR PHPNE NUMBER HERE'
+>
+> my_phone_number = 'YOUR PERSONAL PHONE NUMBER HERE'
 3. Run main.py in the virtual env with "python main.py". At this point, you should receive a text message to your phone number from the twilio number.
 4. In a new terminal, install [ngrok](https://ngrok.com/) and run the following command to your computer (I use wsl, might be different for different os)
 > ngrok http 8000
