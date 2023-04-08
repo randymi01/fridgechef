@@ -13,3 +13,4 @@ env/
 *.bin
 !conversations/output.json
 !entity_entity_extraction/records/*.json
+!restrictions.json

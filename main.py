@@ -16,6 +16,7 @@ from twilio.twiml.messaging_response import MessagingResponse
 import threading
 from flask import Flask, request
 import time
+import os
 import requests
 
 
@@ -141,7 +142,9 @@ class recipe_query_node(output_node):
         to=secret.my_phone_number
         )
         r = ""
+        counter = 0
         for item in recipe_ingredients:
+            counter += 1
             # prints num, unit, item, so like "2 tablespoons soy sauce"
             if item[0] and item[1] and item[2]:
                 r += str(item[1]) + " " + item[2] + " " + item[0] + "\n"
@@ -154,12 +157,22 @@ class recipe_query_node(output_node):
             elif item[0]:
                 r += str(item[0]) + "\n"
                 print(str(item[0]))
+            
+            if counter >= 5:
+                message = client.messages.create(
+                body=r,
+                from_=secret.twilio_number,
+                to=secret.my_phone_number
+                )
+                counter = 0
+                r= ''
 
-        message = client.messages.create(
-        body=r,
-        from_=secret.twilio_number,
-        to=secret.my_phone_number
-        )
+        if counter != 0:
+            message = client.messages.create(
+            body=r,
+            from_=secret.twilio_number,
+            to=secret.my_phone_number
+            )
         # newline to separate ingredients from recipes
         r = ""
         print()
@@ -173,11 +186,7 @@ class recipe_query_node(output_node):
             to=secret.my_phone_number
             )
             r = ""
-
         
-
-        
-
 
 class intent_node(node):
     def __init__(self, prompt: str, intent_func):
@@ -202,6 +211,27 @@ class intent_node(node):
             pass
     def actions(self):
         self.prompt()
+
+
+class returning_user_node(intent_node):
+    def __init__(self, prompt: str, intent_func):
+        self._prompt = prompt
+        self._response = None
+        self.intent_func = intent_func
+        self.children = {}
+    
+    def get_restrictions(self):
+        dietary_restrictions = []
+        with open("restrictions.json", "r") as file:
+            data = json.load(file)
+            for entry in data:
+                if entry["phone_number"] == secret.my_phone_number:
+                    dietary_restrictions.append(entry["allergies"])
+                    dietary_restrictions.append(entry["diets"])
+                    dietary_restrictions.append(entry["intolerances"])
+                    break
+        return dietary_restrictions
+
 
 class entity_extraction_node(node):
     def __init__(self, prompt: str, extraction_func, entity_name):
@@ -232,6 +262,23 @@ class dietary_restrictions_node(node):
         for l in dietary_restrictions:
             if type(l) != list:
                 raise Exception(f"Extraction function must return a list of entities")
+        with open("restrictions.json", "rt") as file:
+            data = json.load(file)
+        for entry in data:
+            if entry["phone_number"] == secret.my_phone_number:
+                entry["allergies"] = dietary_restrictions[0]
+                entry["diets"] = dietary_restrictions[1]
+                entry["intolerances"] = dietary_restrictions[2]
+                with open("restrictions.json", "wt") as file:
+                    json.dump(data, file)
+                return dietary_restrictions
+        new_entry = {"phone_number": secret.my_phone_number,
+                        "allergies": dietary_restrictions[0],
+                        "diets": dietary_restrictions[1],
+                        "intolerances": dietary_restrictions[2]}
+        data.append(new_entry)
+        with open("restrictions.json", "wt") as file:
+            json.dump(data, file)
         return dietary_restrictions
     
     def actions(self):
@@ -265,6 +312,11 @@ class walker:
                 self.json_obj["entities"]["allergies"] = dietary_restrictions[0]
                 self.json_obj["entities"]["diets"] = dietary_restrictions[1]
                 self.json_obj["entities"]["intolerances"] = dietary_restrictions[2]
+            if isinstance(self.current, returning_user_node):
+                dietary_restrictions = self.current.get_restrictions()
+                self.json_obj["entities"]["allergies"] = dietary_restrictions[0]
+                self.json_obj["entities"]["diets"] = dietary_restrictions[1]
+                self.json_obj["entities"]["intolerances"] = dietary_restrictions[2]
             self.current = self.current.get_child()
             self.node_number += 1
             if self.current == None:
@@ -288,8 +340,11 @@ n0_start = output_node("Hello, Welcome to FridgeChef")
 
 n1_first_time = intent_node("Is this your first time using FridgeChef?", yn.yn_intent)
 
+n1_returning_user = intent_node("Have your dietary restrictions changed since last time?", yn.yn_intent)
+
 # temporarily using old food extractor for testing
 n2_dietary_restrictions = dietary_restrictions_node("Do you have any dietary restrictions? (We will do our best to accomodate)")
+n2_dietary_restrictions_alt_text = dietary_restrictions_node("What are your current dietary restrictions? (We will do our best to accomodate)")
 n3_ingredients = entity_extraction_node("What ingredients do you have?",food_extractor.food_extractor, "ingredients")
 
 n4_preference = entity_extraction_node("Do you have a cuisine preference?", cuisine_extract.cuisine_extract, "cuisine")
@@ -300,11 +355,27 @@ n6_like_recipe = intent_node("Do you like this recipe?",yn.yn_intent)
 n7_yes = output_node("Great!")
 n8_no = output_node("Sorry, we will try again")
 
-n0_start.add_child(n1_first_time)
+
+n0_start.add_child(n2_dietary_restrictions)
 n1_first_time.add_child(n2_dietary_restrictions, "POSITIVE")
 n1_first_time.add_child(n3_ingredients, "NEGATIVE")
 
 n2_dietary_restrictions.add_child(n3_ingredients)
+
+if os.stat("restrictions.json").st_size == 0:
+    with open("restrictions.json", "w")  as file: #create file if it does not exist
+        file.write("[]")
+
+with open('restrictions.json', 'r') as file:
+    data = json.load(file)
+    for entry in data:
+        if entry["phone_number"] == secret.my_phone_number:
+            n0_start = output_node("Hello, Welcome back to FridgeChef")
+            n0_start.add_child(n1_returning_user)
+            n1_returning_user.add_child(n2_dietary_restrictions_alt_text, "POSITIVE")
+            n1_returning_user.add_child(n3_ingredients, "NEGATIVE")
+            n2_dietary_restrictions_alt_text.add_child(n3_ingredients)
+
 n3_ingredients.add_child(n4_preference)
 n4_preference.add_child(n5_output_recipe)
 n5_output_recipe.add_child(n6_like_recipe)
