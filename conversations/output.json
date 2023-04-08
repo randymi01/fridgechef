@@ -1272,5 +1272,27 @@
             "cuisine": []
         },
         "length": 7
+    },
+    {
+        "responses": [
+            null,
+            "no",
+            "cheese bananas eggs chocolate",
+            "no",
+            null,
+            "yes",
+            null
+        ],
+        "entities": {
+            "allergies": [],
+            "diets": [],
+            "intolerances": [],
+            "ingredients": [
+                "cheese",
+                "eggs"
+            ],
+            "cuisine": []
+        },
+        "length": 7
     }
 ]

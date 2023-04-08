@@ -142,7 +142,9 @@ class recipe_query_node(output_node):
         to=secret.my_phone_number
         )
         r = ""
+        counter = 0
         for item in recipe_ingredients:
+            counter += 1
             # prints num, unit, item, so like "2 tablespoons soy sauce"
             if item[0] and item[1] and item[2]:
                 r += str(item[1]) + " " + item[2] + " " + item[0] + "\n"
@@ -155,12 +157,22 @@ class recipe_query_node(output_node):
             elif item[0]:
                 r += str(item[0]) + "\n"
                 print(str(item[0]))
+            
+            if counter >= 5:
+                message = client.messages.create(
+                body=r,
+                from_=secret.twilio_number,
+                to=secret.my_phone_number
+                )
+                counter = 0
+                r= ''
 
-        message = client.messages.create(
-        body=r,
-        from_=secret.twilio_number,
-        to=secret.my_phone_number
-        )
+        if counter != 0:
+            message = client.messages.create(
+            body=r,
+            from_=secret.twilio_number,
+            to=secret.my_phone_number
+            )
         # newline to separate ingredients from recipes
         r = ""
         print()
