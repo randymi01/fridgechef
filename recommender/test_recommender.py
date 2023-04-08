@@ -14,3 +14,9 @@ from recommender import get_recs
 # recs = get_recs(ingredients, count=30, allergies="Nuts", diet="Vegetarian", intolerances="Peanut,Shellfish", cuisine="Italian")
 # print(f"\n \n Allergies: {recs['results'][0]}")
 
+# Picky eater (Chinese) - looks good 
+ingredients = ["noodles", "soy sauce", "oyster sauce", "brown rice", "corn", "chicken", "garlic", "eggs", "onion", "scallions", "ginger"]
+recs = get_recs(ingredients, count=30, allergies="Nuts", diet=None, intolerances="Peanut,Shellfish", cuisine="Chinese")
+print(f"\n \n Allergies (Chinese): {recs['results'][0]}")
+
+# Strong cuisine preference
