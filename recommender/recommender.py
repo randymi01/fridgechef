@@ -26,50 +26,50 @@ def list_to_str(my_list):
     list_str = list_str[0:len(list_str) - 1]
     return list_str
 
-def make_ingr_request(ingredient, results):
-    URL = "https://api.spoonacular.com/food/ingredients/search"
+# def make_ingr_request(ingredient, results):
+#     URL = "https://api.spoonacular.com/food/ingredients/search"
 
-    # Initialize parameters. Required items stated here
-    PARAMS = {'apiKey': token,
-              'query': ingredient,
-              'number': 20} # Adding to this number does not harm our query limit
+#     # Initialize parameters. Required items stated here
+#     PARAMS = {'apiKey': token,
+#               'query': ingredient,
+#               'number': 20} # Adding to this number does not harm our query limit
       
-    # sending get request and saving the response as response object
-    r = requests.get(url = URL, params = PARAMS)
+#     # sending get request and saving the response as response object
+#     r = requests.get(url = URL, params = PARAMS)
       
-    # extracting data in json format
-    data = r.json()
+#     # extracting data in json format
+#     data = r.json()
 
-    print(f"Data ({ingredient}) : {data['results']} \n \n ")
-    results.append(data)
+#     print(f"Data ({ingredient}) : {data['results']} \n \n ")
+#     results.append(data)
 
-def improve_ingredients(ingredients):
-    new_ingrs = set()
-    threads = []
-    datas = []
-    for user_ingr in ingredients:
-        user_ingr = user_ingr.lower()
-        # Add original queried ingredient
-        new_ingrs.add(user_ingr)
-        # # Skip query for ingredients that have more than one word already - helps reduce unnecessary queries/ingredients
-        # if len(user_ingr.split()) > 1:
-        #     continue
-        # Make query in new thread
-        t = threading.Thread(target=make_ingr_request, args=(user_ingr, datas))
-        threads.append(t)
-        t.start()
+# def improve_ingredients(ingredients):
+#     new_ingrs = set()
+#     threads = []
+#     datas = []
+#     for user_ingr in ingredients:
+#         user_ingr = user_ingr.lower()
+#         # Add original queried ingredient
+#         new_ingrs.add(user_ingr)
+#         # # Skip query for ingredients that have more than one word already - helps reduce unnecessary queries/ingredients
+#         # if len(user_ingr.split()) > 1:
+#         #     continue
+#         # Make query in new thread
+#         t = threading.Thread(target=make_ingr_request, args=(user_ingr, datas))
+#         threads.append(t)
+#         t.start()
 
-    # Wait for all threads to finish
-    for t in threads:
-        t.join()
+#     # Wait for all threads to finish
+#     for t in threads:
+#         t.join()
 
-    for data in datas:
-        # Add variations of ingredient
-        for result in data['results']:
-            name = result['name']
-            if len(name.split()) <= 2: # Only add ingredients with up to 2 words (filters out things that are too specific)
-                new_ingrs.add(name.lower())
-    return new_ingrs
+#     for data in datas:
+#         # Add variations of ingredient
+#         for result in data['results']:
+#             name = result['name']
+#             if len(name.split()) <= 2: # Only add ingredients with up to 2 words (filters out things that are too specific)
+#                 new_ingrs.add(name.lower())
+#     return new_ingrs
 
 
 def get_calories(recipe_or_ingr):
@@ -104,11 +104,14 @@ def get_essentials_info(recipe):
         calories = get_calories(ingredient)
         # ingredient is 'essential' if it has calories greater than 10% of total meal
         if calories / total_energy > 0.10:
+            ingredient['isEssential'] = True
             id = ingredient['id']
             if id in used_ids:
                 num_used_essential += 1
             elif id in missed_ids:
                 num_missing_essential += 1
+        else:
+            ingredient['isEssential'] = False
 
     return num_used_essential, num_missing_essential
 
