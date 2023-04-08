@@ -6,9 +6,6 @@ sys.path.insert(0, parent_dir)
 import secret
 import threading
 
-# TODO: Add support for intolerances
-# TODO: Play with scoring function to see what improvements can be made
-
 # Revision history
 # 4/1/23 (Kyle) - Added more queries! For every user input ingredient, we query spoonacular for similar ingredients to capture more possible
 # recipes and ingredients (ie: chicken becomes chicken breast, chicken thigh, chicken broth, chicken feet, chicken nugget...)
@@ -18,6 +15,7 @@ import threading
 # 4/2/23 (Kyle) - parallelize calls to spoonacular api
 # 4/2/23 (Jacob) - Small change to boost recipes with all essential ingredients
 # 4/3/23 (Kyle) - Fixed ranking in incorrect order.
+# 4/8/23 (Kyle) - Remove quota limits
 token = secret.SPOON_AUTH
 
 def list_to_str(my_list):
@@ -53,9 +51,9 @@ def improve_ingredients(ingredients):
         user_ingr = user_ingr.lower()
         # Add original queried ingredient
         new_ingrs.add(user_ingr)
-        # Skip query for ingredients that have more than one word already - helps reduce unnecessary queries/ingredients
-        if len(user_ingr.split()) > 1:
-            continue
+        # # Skip query for ingredients that have more than one word already - helps reduce unnecessary queries/ingredients
+        # if len(user_ingr.split()) > 1:
+        #     continue
         # Make query in new thread
         t = threading.Thread(target=make_ingr_request, args=(user_ingr, datas))
         threads.append(t)
@@ -292,22 +290,22 @@ def get_recs(ingredients, count=1, allergies=None, diet=None, intolerances=None,
 
     ### DAILY QUOTA LIMIT CHECKS - used to ensure daily quota isn't reached too quickly
 
-    # Check count bounds - NOTE: Don't change please until closer to demo. For reference, each request with count = 2 requires ~ 1/25th of our daily quota points
-    if count > 1:
-        count = 1
-    elif count < 0:
-        return []
+    # Check count bounds
+    # if count > 1:
+    #     count = 1
+    # elif count < 0:
+    #     return []
     
-    # Trim list, again for daily quota. Can be removed later on
-    if len(ingredients) > 7:
-        ingredients = ingredients[0:7] # Trim list
+    # # Trim list, again for daily quota. Can be removed later on
+    # if len(ingredients) > 7:
+    #     ingredients = ingredients[0:7] # Trim list
 
     ### END DAILY QUOTA LIMIT CHECKS
     
     # Create new list of ingredients based on user input. Finds similar ingredients and appends to original ingredients list
-    #ingredients = improve_ingredients(ingredients) # TODO: Re-add for demo?
+    # ingredients = improve_ingredients(ingredients) # TODO: Re-add for demo?
 
-    #print(f"New ingr: {ingredients}")
+    # print(f"New ingr: {ingredients}")
     
     threads = []
     results = []
