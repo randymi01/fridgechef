@@ -115,6 +115,8 @@ class recipe_query_node(output_node):
         recipe_time = self.recipes['results'][idx]['readyInMinutes']
         recipe_ingredients = self.recipes["results"][idx]['ingredients']
         recipe_instructions = self.recipes['results'][idx]['instructions']
+
+        client = Client(secret.TWILIO_SID, secret.TWILIO_AUTH)
         
         r = ''
         r += "\n" + self._prompt
@@ -132,6 +134,13 @@ class recipe_query_node(output_node):
         else:
             r += str(recipe_time % 60) + " minutes\n\n"
             print(str(recipe_time % 60) + " minutes\n")
+
+        message = client.messages.create(
+        body=r,
+        from_=secret.twilio_number,
+        to=secret.my_phone_number
+        )
+        r = ""
         for item in recipe_ingredients:
             # prints num, unit, item, so like "2 tablespoons soy sauce"
             if item[0] and item[1] and item[2]:
@@ -145,21 +154,29 @@ class recipe_query_node(output_node):
             elif item[0]:
                 r += str(item[0]) + "\n"
                 print(str(item[0]))
-        # newline to separate ingredients from recipes
-        r += "\n"
-        print()
-        for num, line in enumerate(recipe_instructions):
-            # prints numbered instructions, so like "1. boil water"
-            r += str(num + 1) + ". " + line + "\n"
-            print(str(num + 1) + ". " + line)
-
-        client = Client(secret.TWILIO_SID, secret.TWILIO_AUTH)
 
         message = client.messages.create(
         body=r,
         from_=secret.twilio_number,
         to=secret.my_phone_number
         )
+        # newline to separate ingredients from recipes
+        r = ""
+        print()
+        for num, line in enumerate(recipe_instructions):
+            # prints numbered instructions, so like "1. boil water"
+            r += str(num + 1) + ". " + line + "\n"
+            print(str(num + 1) + ". " + line)
+            message = client.messages.create(
+            body=r,
+            from_=secret.twilio_number,
+            to=secret.my_phone_number
+            )
+            r = ""
+
+        
+
+        
 
 
 class intent_node(node):
@@ -275,7 +292,7 @@ n1_first_time = intent_node("Is this your first time using FridgeChef?", yn.yn_i
 n2_dietary_restrictions = dietary_restrictions_node("Do you have any dietary restrictions? (We will do our best to accomodate)")
 n3_ingredients = entity_extraction_node("What ingredients do you have?",food_extractor.food_extractor, "ingredients")
 
-n4_preference = entity_extraction_node("Do you have a cuisine preference? (leave blank if no preference)", cuisine_extract.cuisine_extract, "cuisine")
+n4_preference = entity_extraction_node("Do you have a cuisine preference?", cuisine_extract.cuisine_extract, "cuisine")
 
 n5_output_recipe = recipe_query_node("Here is your recipe")
 
@@ -318,9 +335,11 @@ if __name__ == '__main__':
     global globalResponse
     globalResponse = ''
     # app.run(host='0.0.0.0', port=8000, debug=False)
-    threading.Thread(target=lambda: app.run(host='localhost', port=8000, debug=False)).start()
+    t = threading.Thread(target=lambda: app.run(host='localhost', port=8000, debug=False))
+    t.start()
+    w = walker(n0_start, "conversations/output.json")
+    w.traverse()
 
 
 
-w = walker(n0_start, "conversations/output.json")
-w.traverse()
+
