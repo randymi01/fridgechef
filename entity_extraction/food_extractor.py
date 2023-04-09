@@ -10,7 +10,7 @@ tokenizer = AutoTokenizer.from_pretrained("harr/distilbert-base-uncased-finetune
 
 model = AutoModelForTokenClassification.from_pretrained("harr/distilbert-base-uncased-finetuned-ingredients")
 
-classifier = pipeline('token-classification', model=model, tokenizer=tokenizer, aggregation_strategy = "simple")
+classifier = pipeline('token-classification', model=model, tokenizer=tokenizer, aggregation_strategy = "first")
 
 # return list of food items
 # turn debug to false to stop recording extractions
@@ -34,7 +34,11 @@ def food_extractor(text: str, debug = True):
             f.write(str(output))
         
         os.chdir(current_directory)
-    return [i["word"] for i in output if i["entity_group"] == "ADD" and i["score"] > 0.7]
+
+
+
+    return [i["word"] for i in output if i["entity_group"] == "ADD" and i["score"] > 0.5]
+
         
 
 
