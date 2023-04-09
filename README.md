@@ -34,8 +34,8 @@ Reach goals
 >
 > SPOON_AUTH = "YOUR AUTH KEY HERE"
 >
->
-> twilio_number = 'YOUR TWILIO PHONE NUMBER HERE'
+> 
+> twilio_number = 'YOUR TWILIO PHONE NUMBER HERE' (need a twilio account)
 >
 > my_phone_number = 'YOUR PERSONAL PHONE NUMBER HERE'
 3. Run main.py in the virtual env with "python main.py". At this point, you should receive a text message to your phone number from the twilio number.

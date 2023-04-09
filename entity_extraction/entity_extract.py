@@ -2,7 +2,7 @@ import spacy
 from spellchecker import SpellChecker
 
 def food_extract(user_input):
-    nlp = spacy.load('entity_extraction/food_ner_model') # load English model
+    nlp = spacy.load('food_ner_model') # load English model
 
     words = user_input.split()
 
@@ -31,6 +31,6 @@ def food_extract(user_input):
     return ingredients
 
 # DEMO
-#ui = "I have chicken, kethhup, a lot of butter, salt, and some lemon wedges, and butter. What can I make with these?" # example
-#ingredients = food_extract(ui)
-#print(ingredients)
+ui = "I have chicken, kethhup, a lot of butter, salt, and some lemon wedges, and butter. What can I make with these?" # example
+ingredients = food_extract(ui)
+print(ingredients)
