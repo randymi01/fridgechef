@@ -2,8 +2,6 @@
 !recipe_p2.json
 !100recipes.json
 !output.json
-*.json
-*.Identifier
 !entity_extraction/food_ner_model/*.json
 !entity_extraction/food_ner_model/*.cfg
 secret.py
@@ -14,3 +12,4 @@ env/
 !conversations/output.json
 !entity_entity_extraction/records/*.json
 !restrictions.json
+*.csv
