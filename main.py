@@ -8,15 +8,11 @@ import entity_extraction.diet_extract as diet_extract
 import entity_extraction.intolerance_extract as intolerance_extract
 import secret as secret
 from twilio.rest import Client
-import http.server
-import socketserver
-import socket
 from twilio.twiml.messaging_response import MessagingResponse
 import threading
 from flask import Flask, request
 import time
 import os
-import requests
 
 
 class node:
@@ -68,6 +64,7 @@ class output_node(node):
         )
         print (message.body)
 
+# when this node is reached, query the database and output the recipes
 class recipe_query_node(output_node):
     def __init__(self, prompt: str):
         self.child = None
@@ -79,7 +76,7 @@ class recipe_query_node(output_node):
 
     # NOTE FOR LATER: Do we want to print nutrition info also?
     def query(self, entities):
-        # once we get cuisine preferences and restrictions, add here
+        # On first visit, make query
         if self.times_visited == 0:
             ingredients = []
             diet = None
@@ -157,7 +154,7 @@ class recipe_query_node(output_node):
                 r += str(item[0]) + "\n"
                 print(str(item[0]))
             
-            if counter >= 5:
+            if counter >= 4:
                 message = client.messages.create(
                 body=r,
                 from_=secret.twilio_number,
@@ -212,6 +209,8 @@ class intent_node(node):
         self.prompt()
 
 
+# if the user has used this before, read their dietary restrictions from json
+# TODO: change to mongodb if we decide to scale up the project
 class returning_user_node(intent_node):
     def __init__(self, prompt: str, intent_func):
         self._prompt = prompt
@@ -249,6 +248,7 @@ class entity_extraction_node(node):
         self.prompt()
 
 
+# on the dietary restrictions node, run three entity extractors to get allergies, diets, and intolerances
 class dietary_restrictions_node(node):
     def __init__(self, prompt: str):
         super().__init__(prompt)
@@ -306,6 +306,7 @@ class walker:
             self.json_obj["responses"].append(self.current.get_response())
             if isinstance(self.current, entity_extraction_node):
                 self.json_obj["entities"][self.current.entity_name] = self.current.get_entity()
+            # if we're at dietary restrictions, save diets to json_obj state
             if isinstance(self.current, dietary_restrictions_node):
                 dietary_restrictions = self.current.get_entity()
                 self.json_obj["entities"]["allergies"] = dietary_restrictions[0]
@@ -341,7 +342,6 @@ n1_first_time = intent_node("Is this your first time using FridgeChef?", yn.yn_i
 
 n1_returning_user = intent_node("Have your dietary restrictions changed since last time?", yn.yn_intent)
 
-# temporarily using old food extractor for testing
 n2_dietary_restrictions = dietary_restrictions_node("What are your dietary restrictions? (We will do our best to accomodate)")
 n2_dietary_restrictions_alt_text = dietary_restrictions_node("What are your current dietary restrictions? (We will do our best to accomodate)")
 n3_ingredients = entity_extraction_node("What ingredients do you have?",food_extractor.food_extractor, "ingredients")
@@ -362,11 +362,12 @@ n1_first_time.add_child(n3_ingredients, "NEGATIVE")
 n2_dietary_restrictions.add_child(n3_ingredients)
 
 if os.stat("restrictions.json").st_size == 0:
-    with open("restrictions.json", "w")  as file: #create file if it does not exist
+    with open("restrictions.json", "w")  as file: #create restrictions file if it does not exist, will not need if we switch to mongodb
         file.write("[]")
 
 with open('restrictions.json', 'r') as file:
     data = json.load(file)
+    # if we find the user has used the app before, change the nodes for a returning user
     for entry in data:
         if entry["phone_number"] == secret.my_phone_number:
             n0_start = output_node("Hello, Welcome back to FridgeChef")
@@ -374,6 +375,7 @@ with open('restrictions.json', 'r') as file:
             n1_returning_user.add_child(n2_dietary_restrictions_alt_text, "POSITIVE")
             n1_returning_user.add_child(n3_ingredients, "NEGATIVE")
             n2_dietary_restrictions_alt_text.add_child(n3_ingredients)
+            break
 
 n3_ingredients.add_child(n4_preference)
 n4_preference.add_child(n5_output_recipe)
@@ -385,6 +387,7 @@ n8_no.add_child(n5_output_recipe)
 app = Flask(__name__)
 
 
+# logic for api calls when texting bot back
 @app.route('/sms', methods=['POST', 'GET'])
 def sms_reply():
     global globalResponse
