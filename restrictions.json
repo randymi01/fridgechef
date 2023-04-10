@@ -1,1 +1,1 @@
-[{"phone_number": "+16162649522", "allergies": [], "diets": [], "intolerances": []}]
+[{"phone_number": "+16162649522", "allergies": ["i'm", "shellfish", "i'm", "vegetarian"], "diets": ["vegetarian"], "intolerances": ["shellfish"]}]

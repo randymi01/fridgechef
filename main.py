@@ -255,7 +255,7 @@ class dietary_restrictions_node(node):
     
     def get_entity(self):
         dietary_restrictions = []
-        dietary_restrictions.append(entity_extract.food_extract(self._response))
+        dietary_restrictions.append(food_extractor.food_extractor(self._response))
         dietary_restrictions.append(diet_extract.diet_extract(self._response))
         dietary_restrictions.append(intolerance_extract.intolerance_extract(self._response))
         for l in dietary_restrictions:
@@ -342,11 +342,11 @@ n1_first_time = intent_node("Is this your first time using FridgeChef?", yn.yn_i
 n1_returning_user = intent_node("Have your dietary restrictions changed since last time?", yn.yn_intent)
 
 # temporarily using old food extractor for testing
-n2_dietary_restrictions = dietary_restrictions_node("Do you have any dietary restrictions? (We will do our best to accomodate)")
+n2_dietary_restrictions = dietary_restrictions_node("What are your dietary restrictions? (We will do our best to accomodate)")
 n2_dietary_restrictions_alt_text = dietary_restrictions_node("What are your current dietary restrictions? (We will do our best to accomodate)")
 n3_ingredients = entity_extraction_node("What ingredients do you have?",food_extractor.food_extractor, "ingredients")
 
-n4_preference = entity_extraction_node("Do you have a cuisine preference?", cuisine_extract.cuisine_extract, "cuisine")
+n4_preference = entity_extraction_node("What kinds of cuisine do you prefer?", cuisine_extract.cuisine_extract, "cuisine")
 
 n5_output_recipe = recipe_query_node("Here is your recipe")
 

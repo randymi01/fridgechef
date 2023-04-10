@@ -122,9 +122,7 @@
     "attribute_ruler":[
 
     ],
-    "lemmatizer":[
 
-    ],
     "ner":[
       "CARDINAL",
       "DATE",
@@ -156,7 +154,6 @@
     "parser",
     "senter",
     "attribute_ruler",
-    "lemmatizer",
     "ner"
   ],
   "disabled":[
@@ -164,8 +161,7 @@
     "tagger",
     "parser",
     "senter",
-    "attribute_ruler",
-    "lemmatizer"
+    "attribute_ruler"
   ],
   "performance":{
     "token_acc":0.9986194413,
