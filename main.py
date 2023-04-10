@@ -1,9 +1,8 @@
 import numpy as np
 import intent_classification.yn as yn
-import entity_extraction.food_extractor as food_extractor 
+import entity_extraction.entity_extract as food_extractor 
 import recommender.recommender as recommender
 import json
-import entity_extraction.entity_extract as entity_extract
 import entity_extraction.cuisine_extract as cuisine_extract
 import entity_extraction.diet_extract as diet_extract
 import entity_extraction.intolerance_extract as intolerance_extract

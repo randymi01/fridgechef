@@ -12,4 +12,4 @@ env/
 !conversations/output.json
 !entity_entity_extraction/records/*.json
 !restrictions.json
-*.csv
+RecipeNLG_dataset.csv
