@@ -87,6 +87,7 @@ class recipe_query_node(output_node):
             #try:
             if "ingredients" in entities:
                 ingredients = entities["ingredients"]
+                print(ingredients)
             if "allergies" in entities:
                 allergies = entities["allergies"]
             if "diet" in entities:

@@ -1491,5 +1491,62 @@
             ]
         },
         "length": 7
+    },
+    {
+        "responses": [
+            null,
+            "yes",
+            "I'm vegan, I'm allergic to beans and I'm gluten free",
+            "cheese garlic, onions, bananas",
+            "Japanese",
+            null,
+            "yes",
+            null
+        ],
+        "entities": {
+            "allergies": [
+                "vegan",
+                "beans",
+                "gluten free"
+            ],
+            "diets": [
+                "vegan",
+                "Gluten Free"
+            ],
+            "intolerances": [
+                "gluten"
+            ],
+            "ingredients": [
+                "cheese garlic",
+                "onions",
+                "bananas"
+            ],
+            "cuisine": [
+                "Japanese"
+            ]
+        },
+        "length": 8
+    },
+    {
+        "responses": [
+            null,
+            "no",
+            "bell pepper, tofu, black bean garlic sauce, and some ham",
+            "none",
+            null,
+            "yes",
+            null
+        ],
+        "entities": {
+            "ingredients": [
+                "bell pepper",
+                "tofu",
+                "black bean",
+                "garlic sauce",
+                "ham"
+            ],
+            "cuisine": []
+        },
+        "length": 7
     }
 ]

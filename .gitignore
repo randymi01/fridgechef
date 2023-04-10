@@ -11,5 +11,6 @@ env/
 *.bin
 !conversations/output.json
 !entity_entity_extraction/records/*.json
+!lookups.bin
 !restrictions.json
 RecipeNLG_dataset.csv
